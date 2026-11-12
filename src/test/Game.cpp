@@ -19,6 +19,7 @@
 
 #include <Data/Model.hpp>
 #include <Data/GameModel.hpp>
+#include <Data/AchievementModel.hpp>
 #include <Data/TagModel.hpp>
 #include <Data/FilterModel.hpp>
 #include <Core/Array.hpp>
@@ -268,4 +269,77 @@ TEST(Game, LookupSingleGameByTag) {
 
     ASSERT_EQ(foundId, gameId);
 
+}
+
+TEST(Game, LookupByAchievementProgress) {
+
+    nbl::DatabaseConnection connection;
+    ASSERT_TRUE(nbl::DatabaseConnection::openInMemory(&connection).success());
+    ASSERT_TRUE(nbl::initDatabase(&connection).success());
+
+    i64 gameId = 0;
+    ASSERT_TRUE(nbl::Game::add(&connection, _gameMeta, &gameId).success());
+    ASSERT_NE(gameId, 0);
+
+    nbl::AchievementSet set = {
+        .id = 0,
+        .gameId = gameId,
+        .lastUpdated = 0,
+        .hidden = false,
+        .awardColor = 0,
+        .name = "Test Set",
+        .provider = "test",
+        .providerId = "1",
+        .providerData = {}
+    };
+
+    i64 setId = 0;
+    ASSERT_TRUE(nbl::AchievementSet::add(&connection, set, &setId).success());
+
+    nbl::Achievement unlocked = {
+        .id = 0,
+        .setId = setId,
+        .number = 1,
+        .providerId = "unlocked",
+        .title = "Unlocked",
+        .description = "",
+        .icon = 0,
+        .lockedIcon = 0,
+        .globalUnlockRate = 0.0,
+        .progress = { 0, 0 },
+        .dateUnlocked = 1,
+        .flags = 0,
+        .borderColor = 0,
+        .providerData = {}
+    };
+
+    nbl::Achievement locked = unlocked;
+    locked.number = 2;
+    locked.providerId = "locked";
+    locked.title = "Locked";
+    locked.dateUnlocked = 0;
+
+    i64 achievementId = 0;
+    ASSERT_TRUE(nbl::Achievement::add(&connection, unlocked, &achievementId).success());
+    ASSERT_TRUE(nbl::Achievement::add(&connection, locked, &achievementId).success());
+
+    nbl::SearchCriteria criteria = {
+        .sortBy = nbl::SortBy::ACHIEVEMENT_PROGRESS,
+        .sortOrder = nbl::SortOrder::DESCENDING,
+        .limit = 10
+    };
+
+    bool found = false;
+    ASSERT_TRUE(nbl::Game::lookup(
+        &connection, { .criteria = criteria },
+        [&](const nbl::GameLookupResult& res) -> nbl::Result {
+
+        found = res.id == gameId
+            && res.numAchievements == 2
+            && res.numUnlockedAchievements == 1;
+
+        return nbl::Result::SUCCESS;
+    }).success());
+
+    ASSERT_TRUE(found);
 }

@@ -129,13 +129,14 @@ int main(int argc, char** argv) {
     ISteamUserStats* stats = client->GetISteamUserStats(user, pipe, STEAMUSERSTATS_INTERFACE_VERSION);
     CSteamID id = client->GetISteamUser(user, pipe, STEAMUSER_INTERFACE_VERSION)->GetSteamID();
     
-    i32 awaiting = 0b11;
+    bool userStatsReady = false;
+    bool globalPercentagesReady = false;
     stats->RequestUserStats(id);
 
     u64 startTime = nbl::getCurrentTime();
 
-    while(awaiting > 0) {
-        CallbackMsg_t msg;
+    while(!userStatsReady || !globalPercentagesReady) {
+        CallbackMsg_t msg{};
         bool failed = false;
         bool result = _pfnBGetCallback(pipe, &msg, &failed);
 
@@ -143,7 +144,7 @@ int main(int argc, char** argv) {
 
             _pfnFreeLastCallback(pipe);
             if(msg.m_iCallback == UserStatsReceived_t::k_iCallback) {
-                awaiting &= 0b01;
+                userStatsReady = true;
 
                 if(stats->GetNumAchievements() == 0) {
                     writer.writeObject([&](auto& obj) {
@@ -160,18 +161,32 @@ int main(int argc, char** argv) {
                 if(!stats->GetAchievementAchievedPercent(stats->GetAchievementName(0), &probe) || probe == 0.0f) {
                     stats->RequestGlobalAchievementPercentages();
                 } else {
-                    awaiting &= 0b10;
+                    globalPercentagesReady = true;
                 }
             } else if(msg.m_iCallback == GlobalAchievementPercentagesReady_t::k_iCallback) {
-                awaiting &= 0b10;
-            } else {
-                nbl::sleep(50);
-                u64 currentTime = nbl::getCurrentTime();
-                if(currentTime - startTime > 5000) {
-                    awaiting = 0;
-                }
+                globalPercentagesReady = true;
             }
+        } else {
+            // Steam's callback pump is polled, not blocking. Sleep briefly so
+            // the timeout below is still checked while nothing is happening.
+            nbl::sleep(10);
         }
+
+        if(nbl::getCurrentTime() - startTime > 5000) {
+            break;
+        }
+    }
+
+    if(!userStatsReady) {
+        // Without user stats the achievement list cannot be trusted. Bail out
+        // instead of reporting an empty set and wiping the database.
+        writer.writeObject([&](auto& obj) {
+            obj.add("success", false);
+            obj.add("code", -4);
+            obj.add("error", "Timed out waiting for Steam user stats.");
+            return nbl::Result::SUCCESS;
+        });
+        return 0;
     }
 
 
@@ -254,7 +269,7 @@ int main(int argc, char** argv) {
                             latestUnlock = unlockTimeMillis;
                         }
 
-                        f32 globalUnlockRate;
+                        f32 globalUnlockRate = 0.0f;
                         stats->GetAchievementAchievedPercent(name, &globalUnlockRate);
 
                         object.add("name", nbl::StringView(name));

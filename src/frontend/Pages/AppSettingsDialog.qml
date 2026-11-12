@@ -83,7 +83,8 @@ NblDialog {
                             { icon: "", name: "Theme", tab: "ThemeSettingsTab.qml" },
                             { icon: "", name: "Tags", tab: "../Tag/TagSettingsTab.qml" },
                             { icon: "", name: "Online Accounts", tab: "../Account/AccountSettingsTab.qml" },
-                            { icon: "", name: "Plugins", tab: "../Plugin/PluginSettingsTab.qml" }
+                            { icon: "", name: "Plugins", tab: "../Plugin/PluginSettingsTab.qml" },
+                            { icon: "\uf0ad", name: "Maintenance", tab: "MaintenanceSettingsTab.qml" }
                         ]
 
                         delegate: Item {

@@ -106,7 +106,7 @@ public:
     Result saveImage(i64 refId, u32 width, u32 height, ConstSpan<u8> pixels);
     Result loadImage(i64 imageId, ImageLoadCallback res, ImageAllocationCallback alloc);
 
-    Result pruneUnreferencedImages();
+    Result pruneUnused(ConstSpan<i64> liveRefs);
 
     i64 deviceId() const { return _mDeviceId; }
 

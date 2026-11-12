@@ -121,6 +121,7 @@ public:
     // General
     Q_INVOKABLE void saveSettings(const QVariantMap& settings);
     Q_INVOKABLE QVariantMap loadSettings();
+    Q_INVOKABLE bool cleanupUnusedImages();
 
     Q_INVOKABLE void pushNotification(QVariantMap details) {
         emit notification(details);

@@ -42,8 +42,56 @@
 #include <QString>
 #include <QDesktopServices>
 #include <QColor>
+#include <QColorSpace>
 #include <QHash>
+#include <QImage>
+#include <QImageReader>
 #include <QJSEngine>
+#include <QUrl>
+
+#include <vector>
+
+
+namespace {
+
+// Decode a local image now so it survives without the original file. Images
+// that are only referenced by URL are still fetched lazily.
+nbl::Result _prepareLocalImage(const QString& url, nbl::ImageClass imageClass, QImage* outImage) {
+
+    QString path = QUrl(url).toLocalFile();
+    if(path.isEmpty()) return nbl::Result::INVALID_ARGUMENT;
+
+    QImageReader reader(path);
+    reader.setAutoTransform(true);
+    if(!reader.canRead()) return nbl::Result::IO_ERROR;
+
+    QImage image = reader.read();
+    if(image.isNull()) return nbl::Result::IO_ERROR;
+
+    nbl::ImageClass::Dimensions dim = imageClass.dimensions();
+    if(dim.width > 0 && dim.height > 0 && (image.width() > dim.width || image.height() > dim.height)) {
+        image = image.scaled(
+            dim.width,
+            dim.height,
+            imageClass.shouldCrop() ? Qt::KeepAspectRatioByExpanding : Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        );
+    }
+
+    QColorSpace colorSpace = image.colorSpace();
+    if(colorSpace.isValid() && colorSpace != QColorSpace::SRgb) {
+        image.convertToColorSpace(QColorSpace::SRgb);
+    }
+
+    if(image.format() != QImage::Format_RGBA8888) {
+        image = image.convertToFormat(QImage::Format_RGBA8888);
+    }
+
+    *outImage = image;
+    return nbl::Result::SUCCESS;
+}
+
+}
 
 
 nbl::Result ApplicationContext::pushImage(const QString& url, nbl::ImageClass ic, i64* outId) {
@@ -56,12 +104,72 @@ nbl::Result ApplicationContext::pushImage(const QString& url, nbl::ImageClass ic
         }
         *outId = existingId;
         return nbl::Result::SUCCESS;
-
-    } else {
-
-        QByteArray utf8 = url.toUtf8();
-        return mediaManager()->reserveReference(nbl::StringView(utf8.data(), utf8.length()), ic, outId);
     }
+
+    QByteArray utf8 = url.toUtf8();
+    nbl::StringView urlView(utf8.constData(), static_cast<usize>(utf8.length()));
+
+    if(!url.startsWith("http://") && !url.startsWith("https://")) {
+        QImage image;
+        if(_prepareLocalImage(url, ic, &image).success()) {
+            return mediaManager()->reserveAndSave(
+                urlView,
+                ic,
+                static_cast<u32>(image.width()),
+                static_cast<u32>(image.height()),
+                nbl::ConstSpan<u8>(image.constBits(), static_cast<usize>(image.sizeInBytes())),
+                outId
+            );
+        }
+        // If the file cannot be decoded, keep the reference and let the normal
+        // lazy path deal with it (or fail there).
+    }
+
+    return mediaManager()->reserveReference(urlView, ic, outId);
+}
+
+
+bool ApplicationContext::cleanupUnusedImages() {
+
+    nbl::DatabaseConnection* connection = databaseConnection();
+    nbl::MediaManager* media = mediaManager();
+    if(!connection || !media) return false;
+
+    // The media database doesn't know which rows in the main database still
+    // point at an image, so collect every live reference first.
+    static nbl::StringView query = R"(
+SELECT poster FROM game WHERE poster NOT NULL AND poster != 0
+UNION ALL SELECT banner FROM game WHERE banner NOT NULL AND banner != 0
+UNION ALL SELECT icon FROM game WHERE icon NOT NULL AND icon != 0
+UNION ALL SELECT logo FROM game WHERE logo NOT NULL AND logo != 0
+UNION ALL SELECT poster FROM installation WHERE poster NOT NULL AND poster != 0
+UNION ALL SELECT banner FROM installation WHERE banner NOT NULL AND banner != 0
+UNION ALL SELECT icon FROM installation WHERE icon NOT NULL AND icon != 0
+UNION ALL SELECT logo FROM installation WHERE logo NOT NULL AND logo != 0
+UNION ALL SELECT icon FROM achievement WHERE icon NOT NULL AND icon != 0
+UNION ALL SELECT lockedIcon FROM achievement WHERE lockedIcon NOT NULL AND lockedIcon != 0
+-- flags & 1 is OnlineAccountFlag::IMAGE_ICON
+UNION ALL SELECT icon FROM online_account WHERE (flags & 1) != 0 AND icon NOT NULL AND icon != 0
+-- flags & 4 is TabFlag::IMAGE_ICON
+UNION ALL SELECT icon FROM tab WHERE (flags & 4) != 0 AND icon != 0
+-- flags & 128 is FilterFlag::IMAGE_ICON
+UNION ALL SELECT icon FROM filter WHERE (flags & 128) != 0 AND icon != 0
+)";
+
+    std::vector<i64> liveRefs;
+    nbl::PreparedStatement stmt{};
+    if(connection->prepare(query, &stmt).error()) return false;
+
+    if(connection->execute(&stmt, [&](i32 columns, nbl::DataValue* values, const char**, i64) -> nbl::Result {
+        if(columns > 0 && values[0].type == nbl::DataType::INTEGER) {
+            liveRefs.push_back(values[0].intValue);
+        }
+        return nbl::Result::SUCCESS;
+    }).error()) {
+        return false;
+    }
+
+    return media->pruneUnused(nbl::ConstSpan<i64>(liveRefs.data(), liveRefs.size())).success();
 }
 
 
@@ -127,6 +235,12 @@ void ApplicationContext::_initialize() {
     }, &_mContext).success());
 
     NBL_ASSERT(_mContext.beginLoad().success());
+
+    // Drop image references that no game, installation, tab, achievement, or
+    // account points at anymore, then reclaim the image data they owned.
+    if(!cleanupUnusedImages()) {
+        NBL_WARN("Failed to clean up unused images.");
+    }
 }
 
 

@@ -266,6 +266,12 @@ CREATE TABLE IF NOT EXISTS online_account (
     status INTEGER DEFAULT 0
 );
 
+-- Foreign keys are not indexed automatically by SQLite. These are the joins
+-- and lookups used by the game/installation list queries.
+CREATE INDEX IF NOT EXISTS idx_installation_gId ON installation(gId);
+CREATE INDEX IF NOT EXISTS idx_achievement_set_gId ON achievement_set(gId);
+CREATE INDEX IF NOT EXISTS idx_achievement_asId ON achievement(asId);
+
 -- Default Rows
 INSERT INTO tag
 (tId, name, color)
@@ -298,7 +304,7 @@ INSERT INTO filter
 VALUES
 (3,2,'Favorites','','{"sortBy":"title","sortOrder":"ascending","tags":[[1]]}',1,0);
 
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 COMMIT;
 )";
 
@@ -307,6 +313,21 @@ COMMIT;
         return nbl::Result::SUCCESS;
 
     } else if(userVersion == 1) {
+
+        nbl::StringView initQuery = R"(
+PRAGMA foreign_keys = ON;
+BEGIN TRANSACTION;
+CREATE INDEX IF NOT EXISTS idx_installation_gId ON installation(gId);
+CREATE INDEX IF NOT EXISTS idx_achievement_set_gId ON achievement_set(gId);
+CREATE INDEX IF NOT EXISTS idx_achievement_asId ON achievement(asId);
+PRAGMA user_version = 2;
+COMMIT;
+)";
+        NBL_CHECK(connection->execute(initQuery));
+
+        return nbl::Result::SUCCESS;
+
+    } else if(userVersion == 2) {
 
         nbl::StringView initQuery = "PRAGMA foreign_keys = ON;";
         NBL_CHECK(connection->execute(initQuery));
