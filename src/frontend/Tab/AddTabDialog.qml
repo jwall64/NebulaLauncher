@@ -51,7 +51,7 @@ NblDialog {
 
         return {
             id: tabId,
-            name: nameInput.text,
+            name: nameInput.text.length == 0 ? "New Tab" : nameInput.text,
             icon: iconPicker.icon,
             iconIsImage: iconPicker.isImage,
             colorizeIcon: iconPicker.colorize,
