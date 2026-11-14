@@ -302,13 +302,18 @@ SUM(installation.playTime) + game.previousPlayTime)");
             break;
         case SortBy::ACHIEVEMENT_PROGRESS:
             stmtBuilder.append(R"(, 
-(SELECT count FROM achievement_counts WHERE game.gId = achievement_counts.gId), 
-(SELECT count FROM achievement_unlocked_counts WHERE game.gId = achievement_unlocked_counts.gId) 
+COALESCE(achievement_counts.count, 0), 
+COALESCE(achievement_unlocked_counts.count, 0) 
             )");
            break;
         }
 
         stmtBuilder.append(_stmtJoins);
+        if(criteria.sortBy == SortBy::ACHIEVEMENT_PROGRESS) {
+            stmtBuilder.append(R"(
+LEFT JOIN achievement_counts ON achievement_counts.gId = game.gId
+LEFT JOIN achievement_unlocked_counts ON achievement_unlocked_counts.gId = game.gId)");
+        }
         if(hasTags) {
             stmtBuilder.append(R"(
 LEFT JOIN matching_sets ON matching_sets.gId = game.gId
@@ -324,10 +329,10 @@ LEFT JOIN set_sizes ON set_sizes.setId = matching_sets.setId)");
         }
         if(criteria.sortBy == SortBy::ACHIEVEMENT_PROGRESS) {
             stmtBuilder.append(R"(
-  AND (?11 = 0 OR ?11 <= (SELECT COUNT(aId) FROM achievements WHERE gId = game.gId))
-  AND (?12 = 0 OR ?12 > (SELECT COUNT(aId) FROM achievements WHERE gId = game.gId))
-  AND (?13 = 0 OR ?13 <= (SELECT COUNT(aId) FROM achievements WHERE gId = game.gId AND achievements.unlocked = 1))
-  AND (?14 = 0 OR ?14 > (SELECT COUNT(aId) FROM achievements WHERE gId = game.gId AND achievements.unlocked = 1))
+  AND (?11 = 0 OR ?11 <= COALESCE(achievement_counts.count, 0))
+  AND (?12 = 0 OR ?12 > COALESCE(achievement_counts.count, 0))
+  AND (?13 = 0 OR ?13 <= COALESCE(achievement_unlocked_counts.count, 0))
+  AND (?14 = 0 OR ?14 > COALESCE(achievement_unlocked_counts.count, 0))
             )");
         }
 
@@ -360,7 +365,7 @@ LEFT JOIN set_sizes ON set_sizes.setId = matching_sets.setId)");
                 stmtBuilder.append("ORDER BY game.rating");
                 break;
             case SortBy::ACHIEVEMENT_PROGRESS:
-                stmtBuilder.append("ORDER BY CAST((SELECT COUNT(aId) FROM achievements WHERE achievements.gId=game.gId AND unlocked = 1) AS REAL) / (SELECT COUNT(aId) FROM achievements WHERE achievements.gId=game.gId)");
+                stmtBuilder.append("ORDER BY CAST(COALESCE(achievement_unlocked_counts.count, 0) AS REAL) / NULLIF(COALESCE(achievement_counts.count, 0), 0)");
                 break;
             default:
                 return nbl::Result::INVALID_ARGUMENT;
