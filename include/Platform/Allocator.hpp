@@ -171,7 +171,8 @@ public:
 
     InPlaceAllocator(void* buffer, usize capacity) : 
         _pData(buffer),
-        _mCapacity(capacity)
+        _mCapacity(capacity),
+        _mIndex(0)
     { }
 
     inline void* begin() const noexcept override { return _pData; }

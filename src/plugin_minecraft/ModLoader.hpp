@@ -27,6 +27,7 @@ struct ModLoader {
     enum Value : u32 {
         VANILLA,
         FABRIC,
+        QUILT,
         _END
     };
 
@@ -39,6 +40,7 @@ struct ModLoader {
 
     static inline u32 index(nbl::PluginContext* ctx,StringView name, void* userData) {
         if(name == "fabric") return ModLoader::FABRIC;
+        if(name == "quilt") return ModLoader::QUILT;
         return VANILLA;
     }
     static inline StringView name(nbl::PluginContext* ctx,u32 index, void* userData) {
@@ -46,6 +48,7 @@ struct ModLoader {
             default:
             case VANILLA: return "vanilla";
             case FABRIC: return "fabric";
+            case QUILT: return "quilt";
         }
     }
     static inline StringView displayName(nbl::PluginContext* ctx,u32 index, void* userData) {
@@ -53,6 +56,7 @@ struct ModLoader {
             default:
             case VANILLA: return "None";
             case FABRIC: return "Fabric";
+            case QUILT: return "Quilt";
         }
     }
     static inline u32 count(nbl::PluginContext* ctx,void* userData) {
@@ -62,6 +66,7 @@ struct ModLoader {
 
 
 Result generateFabricVersionMeta(VersionRef* outVersion, StringView folder, DownloadManager* manager, LinearAllocator* allocator);
+Result generateQuiltVersionMeta(VersionRef* outVersion, StringView folder, DownloadManager* manager, LinearAllocator* allocator);
 
 
 }

@@ -26,11 +26,19 @@
 
 #include "MinecraftLauncher.hpp"
 #include "AuthManager.hpp"
+#include "LogTransformer.hpp"
 
 namespace {
 
 
 nbl::mc::MinecraftLauncher _launcher{};
+
+nbl::LogTransformFunction _logTransformer = {
+    .pfnCreate = nbl::mc::createMinecraftLogTransformer,
+    .pfnTransform = nbl::mc::transformMinecraftLogLine,
+    .pfnDestroy = nbl::mc::destroyMinecraftLogTransformer,
+    .userData = nullptr
+};
 
 
 // TODO: Fields custom JVM args, wrapper program, etc.
@@ -147,7 +155,8 @@ nbl::InstallationType _type = {
     .getFolderFunc = {
         .pfnGetFolder = _getFolder,
         .userData = nullptr
-    }
+    },
+    .logTransform = _logTransformer
 };
 
 

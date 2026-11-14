@@ -70,6 +70,9 @@ nbl::Result nbl::mc::MinecraftLauncher::launch(nbl::PluginContext* ctx, StringVi
     if(modLoader == ModLoader::FABRIC) {
         ref.parent = &baseRef;
         NBL_CHECK(generateFabricVersionMeta(&ref, _mRootFolder, &downloadManager, &frame));
+    } else if(modLoader == ModLoader::QUILT) {
+        ref.parent = &baseRef;
+        NBL_CHECK(generateQuiltVersionMeta(&ref, _mRootFolder, &downloadManager, &frame));
     }
 
     JsonObject logger = ref.loggingInfo("client");

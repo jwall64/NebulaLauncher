@@ -17,8 +17,10 @@
 
 #include <QRegularExpression>
 
+#include <Platform/Allocator.hpp>
 #include <Platform/Logging.hpp>
 #include <Core/Result.hpp>
+#include <Utility/StringBuilder.hpp>
 
 #define BACKLOG_SIZE 1024 * 1024 // 1 MiB
 
@@ -44,8 +46,26 @@ i32 _threadProc(void* userData) {
         for(usize i = 0 ; i < bytesRead ; i++) {
             char c = copyBuffer[i];
             if(c == '\n') {
-                handle->appendLine(currentLine.remove(ansiRegex));
+                QString line = currentLine.remove(ansiRegex);
+                if(line.endsWith('\r')) line.chop(1);
                 currentLine.resizeForOverwrite(0);
+
+                if(handle->hasLogTransformer()) {
+                    QByteArray utf8 = line.toUtf8();
+
+                    QString transformed{};
+                    nbl::Result res = handle->transformLine(
+                            nbl::StringView(utf8.constData(), static_cast<usize>(utf8.size())),
+                            &transformed);
+
+                    if(res.error()) {
+                        handle->appendLine(line);
+                    } else if(!transformed.isEmpty()) {
+                        handle->appendLine(transformed);
+                    }
+                } else {
+                    handle->appendLine(line);
+                }
             } else {
                 currentLine += c;
             }
@@ -63,7 +83,34 @@ i32 _threadProc(void* userData) {
 
 nbl::Result nbl::frontend::ProcessHandle::initLogging() {
 
+    if(_mLogTransformer.pfnCreate != nullptr) {
+        nbl::Result res = _mLogTransformer.pfnCreate(_mPluginContext, &_mLogState, _mLogTransformer.userData);
+        if(res.error()) {
+            _mLogState = nullptr;
+            _mLogTransformer = {};
+            NBL_WARN("Failed to create the log transformer state; falling back to raw output");
+        }
+    }
+
     NBL_CHECK(nbl::Thread::create(_threadProc, this, &_mWatcherThread));
+    return nbl::Result::SUCCESS;
+
+}
+
+nbl::Result nbl::frontend::ProcessHandle::transformLine(nbl::StringView line, QString* outLine) {
+
+    if(!_mLogTransformer.valid()) return nbl::Result::INVALID_STATE;
+
+    char buffer[128 * 1024];
+    nbl::InPlaceAllocator allocator(buffer, sizeof(buffer));
+    nbl::StringBuilder builder(&allocator);
+
+    NBL_CHECK(_mLogTransformer.pfnTransform(_mPluginContext, _mLogState, line, &builder, _mLogTransformer.userData));
+
+    nbl::StringView transformed{};
+    NBL_CHECK(builder.build(&transformed));
+    *outLine = QString::fromUtf8(transformed.data(), static_cast<qsizetype>(transformed.length()));
+
     return nbl::Result::SUCCESS;
 
 }

@@ -90,3 +90,28 @@ nbl::Result nbl::mc::generateFabricVersionMeta(VersionRef* outVersion, StringVie
 
     return nbl::Result::SUCCESS;
 }
+
+nbl::Result nbl::mc::generateQuiltVersionMeta(VersionRef* outVersion, StringView folder, DownloadManager* manager, LinearAllocator* allocator) {
+
+    StringView versionId = outVersion->parent->id();
+
+    StringView loaderPath{};
+    NBL_CHECK(StringBuilder(allocator).append(folder).append("/quilt/loader-").append(versionId).append(".json").buildNullTerminated(&loaderPath));
+
+    if(!nbl::fileExists(loaderPath)) {
+        StringView url{};
+        NBL_CHECK(StringBuilder(allocator).append("https://meta.quiltmc.org/v3/versions/loader/").append(versionId).append("/profile/json").buildNullTerminated(&url));
+        NBL_CHECK(manager->downloadNow(loaderPath, url));
+    }
+
+    nbl::FileChannel file{};
+    NBL_CHECK(nbl::FileChannel::open(loaderPath, &file, FileOpenFlag::READ));
+
+    nbl::JsonElement element{};
+    NBL_CHECK(nbl::parseJson(file.reader(), allocator, &element));
+    if(element.type() != JsonType::OBJECT) return nbl::Result::FORMAT_ERROR;
+
+    outVersion->root = element.asObject();
+
+    return nbl::Result::SUCCESS;
+}

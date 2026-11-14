@@ -20,6 +20,7 @@
 
 #include <Platform/Process.hpp>
 #include <Plugin/ProcessTracker.hpp>
+#include <Plugin/LogTransformer.hpp>
 
 
 namespace nbl::frontend {
@@ -40,12 +41,19 @@ public:
         _bIsStopping(false),
         _mTracker{},
         _mWatcherThread{},
-        _mLogs("")
+        _mLogs(""),
+        _mPluginContext(nullptr),
+        _mLogTransformer{},
+        _mLogState(nullptr)
     { }
 
     ~ProcessHandle() {
         if(_mWatcherThread.isRunning()) {
             _mWatcherThread.join(nullptr);
+        }
+
+        if(_mLogTransformer.pfnDestroy != nullptr && _mLogState != nullptr) {
+            _mLogTransformer.pfnDestroy(_mPluginContext, _mLogState, _mLogTransformer.userData);
         }
     }
 
@@ -96,6 +104,17 @@ public:
 
     inline nbl::ProcessTracker* tracker() { return &_mTracker; }
 
+    inline void setLogTransformer(nbl::PluginContext* context, const nbl::LogTransformFunction& transformer) {
+        _mPluginContext = context;
+        _mLogTransformer = transformer;
+    }
+
+    inline bool hasLogTransformer() const {
+        return _mLogTransformer.valid();
+    }
+
+    nbl::Result transformLine(nbl::StringView line, QString* outLine);
+
     inline QString logs() {
         return _mLogs;
     }
@@ -132,6 +151,10 @@ private:
     nbl::ProcessTracker::State _mPrevState;
     nbl::Thread _mWatcherThread;
     QString _mLogs;
+
+    nbl::PluginContext* _mPluginContext;
+    nbl::LogTransformFunction _mLogTransformer;
+    void* _mLogState;
 
 };
 

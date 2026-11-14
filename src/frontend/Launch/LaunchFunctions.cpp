@@ -108,6 +108,8 @@ nbl::frontend::ProcessHandle* ApplicationContext::launchInstallation(qint64 inst
                 NBL_CHECK(nbl::parseJson(meta.command, &frame, &value));
                 NBL_CHECK(nbl::decodeFieldValues(&ctx->_mContext, installType->fields, value.asObject(), &values, &frame));
             }
+
+            handle->setLogTransformer(ctx->pluginContext(), installType->logTransform);
             NBL_CHECK(installType->launch(&ctx->_mContext, values, meta, handle->tracker()));
             NBL_CHECK(handle->initLogging());
             handle->check();

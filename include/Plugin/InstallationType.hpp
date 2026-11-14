@@ -31,6 +31,7 @@
 #include <Plugin/PluginContext.hpp>
 #include <Plugin/ProcessTracker.hpp>
 #include <Plugin/Field.hpp>
+#include <Plugin/LogTransformer.hpp>
 
 namespace nbl {
 
@@ -62,6 +63,7 @@ struct InstallationType {
     Span<Field> fields;
     LaunchInstallationFunction launchFunc;
     GetFolderFunction getFolderFunc;
+    LogTransformFunction logTransform;
 
     inline Result launch(PluginContext* ctx, nbl::Span<FieldValue> fields, const nbl::Installation& meta, ProcessTracker* handle) const {
         if(launchFunc.pfnLaunchInstallation == nullptr) return nbl::Result::PLUGIN_ERROR;

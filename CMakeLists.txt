@@ -271,8 +271,18 @@ if(${NBL_BUILD_TESTS})
 
     list(FILTER NBL_TEST_SOURCES EXCLUDE REGEX ".*/Plugin.cpp$")
 
+    if(NOT ${NBL_BUILD_MINECRAFT_PLUGIN})
+        list(FILTER NBL_TEST_SOURCES EXCLUDE REGEX ".*/MinecraftLog.cpp$")
+        list(FILTER NBL_TEST_SOURCES EXCLUDE REGEX ".*/Quilt.cpp$")
+    endif()
+
     add_executable(Nebula_Test ${NBL_TEST_SOURCES})
     target_link_libraries(Nebula_Test PRIVATE Nebula_Api)
     target_link_libraries(Nebula_Test PRIVATE GTest::gtest_main)
+
+    if(${NBL_BUILD_MINECRAFT_PLUGIN})
+        target_link_libraries(Nebula_Test PRIVATE Nebula_MinecraftPlugin)
+        target_include_directories(Nebula_Test PRIVATE ${NBL_SRC_DIR}/plugin_minecraft)
+    endif()
 endif()
 
