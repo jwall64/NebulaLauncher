@@ -101,6 +101,12 @@ NblDialog {
                 id: hiddenBox
                 width: controls.width
                 text: "Hidden"
+
+                NblToolTip {
+                    delay: 500
+                    text: "Hidden tabs can be shown again with Ctrl+H or the Show Hidden Tabs menu item."
+                    visible: hiddenBox.hovered
+                }
             }
 
             
@@ -387,7 +393,7 @@ NblDialog {
                             min: 0
                             max: 100
                             allowDecimal: true
-                            value: dropdown.modelData.minRating
+                            value: dropdown.modelData.maxRating
                         }
 
                         NblNumberInput {

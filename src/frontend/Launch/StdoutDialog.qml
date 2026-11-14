@@ -20,6 +20,7 @@ NblDialog {
     id: root
 
     property ProcessHandle process: null
+    property string retainedLogs: ""
 
     targetWidth: 1200
     targetHeight: 800
@@ -41,10 +42,29 @@ NblDialog {
         }
     ]
 
-    onProcessChanged: {
-        if(process != null) {
-            outputContent.text = process.logs
+    function refreshLogs() {
+        outputContent.text = process != null ? process.logs : retainedLogs
+    }
+
+    function appendLogs() {
+        if(process == null) return
+
+        let logs = process.logs
+        let oldLength = outputContent.text.length
+
+        // Avoid re-rendering the whole log on every update. The ring buffer only
+        // trims occasionally, so the text is usually an extension of what QML
+        // already has.
+        if(logs.startsWith(outputContent.text)) {
+            outputContent.insert(oldLength, logs.substring(oldLength))
+        } else {
+            outputContent.text = logs
         }
+    }
+
+    onProcessChanged: refreshLogs()
+    onRetainedLogsChanged: {
+        if(process == null) refreshLogs()
     }
 
     Rectangle {
@@ -93,8 +113,16 @@ NblDialog {
             Connections {
                 target: root.process
                 function onLogsUpdated() {
-                    outputContent.text = root.process.logs
+                    if(root.process == null) return
+                    root.appendLogs()
                     flickable.scrollToBottom()
+                }
+                function onStopped() {
+                    // Keep the final output around after the process handle goes away.
+                    if(root.process != null) {
+                        root.retainedLogs = root.process.logs
+                    }
+                    root.process = null
                 }
             }
 

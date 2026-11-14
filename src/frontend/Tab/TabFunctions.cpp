@@ -68,11 +68,11 @@ nbl::Result _pushFilters(ApplicationContext* context, nbl::DatabaseConnection* c
         nbl::SortOrder sortOrder = static_cast<nbl::SortOrder>(filter["sortOrder"].toInt());
         
         u64 minReleaseDate = filter["minReleaseDate"].toULongLong();
-        u64 maxReleaseDate = filter["minReleaseDate"].toULongLong();
+        u64 maxReleaseDate = filter["maxReleaseDate"].toULongLong();
         f64 minRating = filter["minRating"].toDouble();
-        f64 maxRating = filter["minRating"].toDouble();
+        f64 maxRating = filter["maxRating"].toDouble();
         u64 minPlayTime = filter["minTime"].toULongLong();
-        u64 maxPlayTime = filter["minTime"].toULongLong();
+        u64 maxPlayTime = filter["maxTime"].toULongLong();
         u64 minAchievements = filter["minAchievements"].toULongLong();
         u64 maxAchievements = filter["maxAchievements"].toULongLong();
         u64 minUnlockedAchievements = filter["minUnlockedAchievements"].toULongLong();

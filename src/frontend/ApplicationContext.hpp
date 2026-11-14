@@ -133,6 +133,8 @@ public:
     // InstallationType
     Q_INVOKABLE nbl::frontend::ProcessHandle* launchInstallation(qint64 installationId);
     Q_INVOKABLE nbl::frontend::ProcessHandle* getRunningInstallation(qint64 installationId);
+    Q_INVOKABLE QString getInstallationLogs(qint64 installationId);
+    Q_INVOKABLE void clearInstallationLogs(qint64 installationId);
     Q_INVOKABLE int openInstallationFolder(qint64 installationId);
 
     // Game
@@ -207,5 +209,6 @@ private:
     bool _bInitialized = false;
     nbl::PluginContext _mContext;
     QHash<i64, nbl::frontend::ProcessHandle*> _mRunningProcesses;
+    QHash<i64, QString> _mInstallationLogs;
 
 };

@@ -121,6 +121,7 @@ Item {
                             }
                             onDeleteRequested: {
                                 DialogManager.openDeleteConfirmation("Are you sure you want to delete this tab?", function() {
+                                    ApplicationContext.deleteTab(tabId)
                                     root.reloadTabs()
                                     root.tabEdited(tabId)
                                 })
@@ -169,7 +170,7 @@ Item {
 
                     NblContextMenu {
                         id: addMenu
-                        height: 96
+                        height: 144
                         contentItem: ColumnLayout {
                             spacing: 0
                             NblButton {
@@ -199,6 +200,17 @@ Item {
                                         root.reloadTabs()
                                     })
                                     dialog.open()
+                                }
+                                radius: 2
+                            }
+                            NblButton {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                icon: root.showHidden ? "" : ""
+                                text: root.showHidden ? "Hide Hidden Tabs" : "Show Hidden Tabs"
+                                onClicked: {
+                                    addMenu.close()
+                                    root.showHidden = !root.showHidden
                                 }
                                 radius: 2
                             }

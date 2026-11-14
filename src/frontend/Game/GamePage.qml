@@ -27,6 +27,7 @@ Item {
     required property GameDetails details
     
     property int selectedInstallation: installationPicker.selectedInstallationId
+    property int logsInstallationId: 0
     property InstallationDetails installationDetails
 
 
@@ -71,6 +72,18 @@ Item {
 
     Component.onCompleted: {
         achievementUpdateRunner.update(root.details.gameId, 0)
+    }
+
+    onSelectedInstallationChanged: {
+        if(selectedInstallation != 0) {
+            logsInstallationId = selectedInstallation
+        }
+    }
+
+    Component.onDestruction: {
+        if(logsInstallationId != 0) {
+            ApplicationContext.clearInstallationLogs(logsInstallationId)
+        }
     }
 
     AchievementUpdateRunner { 
@@ -297,7 +310,8 @@ Item {
                     icon: "󰆍"
                     onClicked: {
                         let dialog = DialogManager.create("Launch/StdoutDialog.qml", { 
-                            process: launchBtn.handle
+                            process: launchBtn.handle,
+                            retainedLogs: ApplicationContext.getInstallationLogs(root.selectedInstallation)
                         }) as NblDialog
                         dialog.open()
                     }

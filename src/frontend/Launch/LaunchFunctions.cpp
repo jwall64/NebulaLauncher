@@ -62,10 +62,18 @@ nbl::frontend::ProcessHandle* ApplicationContext::launchInstallation(qint64 inst
         }
     }
 
+    // A new launch starts a new log, so don't keep the previous run's output.
+    _mInstallationLogs.remove(installationId);
+
     nbl::frontend::ProcessHandle* handle = new nbl::frontend::ProcessHandle();
     QQmlEngine::setObjectOwnership(handle, QQmlEngine::CppOwnership);
 
     connect(handle, &nbl::frontend::ProcessHandle::stopped, this, [this, installationId, handle]() {
+        // Make sure the watcher has drained the pipe before we take the final
+        // copy. This is what keeps crash logs available after the process exits.
+        handle->waitForLogs();
+        _mInstallationLogs[installationId] = handle->logs();
+
         _mRunningProcesses.remove(installationId);
         handle->deleteLater();
     });
@@ -116,6 +124,7 @@ nbl::frontend::ProcessHandle* ApplicationContext::launchInstallation(qint64 inst
         });
 
         if(res.error()) {
+            ctx->_mRunningProcesses.remove(installationId);
             handle->deleteLater();
             ctx->_mContext.pushNotification(nbl::NotificationType::ERROR, "Failed to launch", "An error occurred while launching an installation");
         }
@@ -126,6 +135,7 @@ nbl::frontend::ProcessHandle* ApplicationContext::launchInstallation(qint64 inst
 
 
     if(res.error()) {
+        _mRunningProcesses.remove(installationId);
         handle->deleteLater();
         _mContext.pushNotification(nbl::NotificationType::ERROR, "Failed to launch", "Failed to spawn a new thread");
         return nullptr;
@@ -137,6 +147,18 @@ nbl::frontend::ProcessHandle* ApplicationContext::launchInstallation(qint64 inst
 nbl::frontend::ProcessHandle* ApplicationContext::getRunningInstallation(qint64 installationId) {
     if(!_mRunningProcesses.contains(installationId)) return nullptr;
     return _mRunningProcesses[installationId];
+}
+
+QString ApplicationContext::getInstallationLogs(qint64 installationId) {
+    if(_mRunningProcesses.contains(installationId)) {
+        nbl::frontend::ProcessHandle* handle = _mRunningProcesses[installationId];
+        if(handle != nullptr) return handle->logs();
+    }
+    return _mInstallationLogs.value(installationId);
+}
+
+void ApplicationContext::clearInstallationLogs(qint64 installationId) {
+    _mInstallationLogs.remove(installationId);
 }
 
 int ApplicationContext::openInstallationFolder(qint64 installationId) {

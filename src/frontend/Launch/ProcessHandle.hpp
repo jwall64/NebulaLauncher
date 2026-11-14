@@ -16,6 +16,9 @@
 #pragma once
 
 #include <QObject>
+#include <QMutex>
+#include <QStringList>
+#include <QTimer>
 #include <QtQml>
 
 #include <Platform/Process.hpp>
@@ -39,9 +42,19 @@ public:
         QObject(parent),
         _bIsStopping(false),
         _mTracker{},
+        _mPrevState(nbl::ProcessTracker::State::NOT_STARTED),
         _mWatcherThread{},
-        _mLogs("")
-    { }
+        _mLines{},
+        _mLogSize(0),
+        _mLogsCache{},
+        _mLogsCacheValid(false),
+        _mLogsDirty(false),
+        _mUpdateTimer{}
+    {
+        _mUpdateTimer.setSingleShot(true);
+        _mUpdateTimer.setInterval(50);
+        connect(&_mUpdateTimer, &QTimer::timeout, this, &ProcessHandle::_flushLogs);
+    }
 
     ~ProcessHandle() {
         if(_mWatcherThread.isRunning()) {
@@ -96,14 +109,16 @@ public:
 
     inline nbl::ProcessTracker* tracker() { return &_mTracker; }
 
-    inline QString logs() {
-        return _mLogs;
+    QString logs();
+
+    void appendLines(const QStringList& logLines);
+    inline void appendLine(const QString& logLine) {
+        appendLines(QStringList { logLine });
     }
 
-    inline void appendLine(QString logLine) {
-        _mLogs += logLine + '\n';
-        emit logsUpdated();
-    }
+    // Joins the output watcher. Call after the process has exited to make sure
+    // every buffered line has reached the log store.
+    void waitForLogs();
 
     nbl::Result initLogging();
 
@@ -127,11 +142,26 @@ signals:
 
 private:
 
+    // Keep no more than 1 MiB of log text. When the limit is exceeded, drop
+    // the oldest quarter so trimming does not happen on every new line.
+    static constexpr qsizetype _MAX_LOG_SIZE = 1024 * 1024;
+    static constexpr qsizetype _LOG_TRIM_TARGET = _MAX_LOG_SIZE * 3 / 4;
+
+    void _flushLogs();
+    void _scheduleLogUpdate();
+
     bool _bIsStopping;
     nbl::ProcessTracker _mTracker;
     nbl::ProcessTracker::State _mPrevState;
     nbl::Thread _mWatcherThread;
-    QString _mLogs;
+
+    mutable QMutex _mLogMutex;
+    QStringList _mLines;
+    qsizetype _mLogSize;
+    QString _mLogsCache;
+    bool _mLogsCacheValid;
+    bool _mLogsDirty;
+    QTimer _mUpdateTimer;
 
 };
 
