@@ -324,7 +324,7 @@ NblDialog {
                 rightPadding: 48
 
                 onClicked: {
-                    let dialog = DialogManager.create("Installation/AddGameDialog.qml", {})
+                    let dialog = DialogManager.create("Game/AddGameDialog.qml", {})
 
                     dialog.closed.connect(root.close)
                     dialog.gameAdded.connect(root.gameAdded)
