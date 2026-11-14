@@ -108,6 +108,13 @@ ApplicationWindow {
                             tabPage.refresh()
                         } 
                     }
+                    onTabDeleted: (tabId) => {
+                        let tabPage = pageLoader.currentItem as TabPage
+                        if(!tabPage || tabPage.tabId == tabId) {
+                            let first = getFirstTab()
+                            if(first != -1) root.openTab(first)
+                        } 
+                    }
                     onGameAdded: function(id) {
                         root.openGameDetails(id)
                     }

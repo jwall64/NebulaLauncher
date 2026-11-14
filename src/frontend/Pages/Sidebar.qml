@@ -29,14 +29,19 @@ Item {
 
     signal tabClicked(int tabId)
     signal tabEdited(int tabId)
+    signal tabDeleted(int tabId)
     signal gameAdded(int gameId)
 
     implicitWidth: collapsed ? 64 : 240
 
     Component.onCompleted: {
-        if(tabRepeater.count > 0) {
-            root.tabClicked((tabRepeater.itemAt(0) as TabButton).tabId)
-        }
+        let first = getFirstTab()
+        if(first != -1) root.tabClicked(first)
+    }
+
+    function getFirstTab() {
+        if(tabRepeater.count == 0) return -1;
+        return (tabRepeater.itemAt(0) as TabButton).tabId
     }
 
     function reloadTabs() {
@@ -121,8 +126,9 @@ Item {
                             }
                             onDeleteRequested: {
                                 DialogManager.openDeleteConfirmation("Are you sure you want to delete this tab?", function() {
+                                    ApplicationContext.deleteTab(tabId)
                                     root.reloadTabs()
-                                    root.tabEdited(tabId)
+                                    root.tabDeleted(tabId)
                                 })
                             }
                         }
