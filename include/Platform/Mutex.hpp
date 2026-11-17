@@ -30,10 +30,14 @@
 
 #include <utility>
 
-#ifdef NBL_PLATFORM_LINUX
+#if defined(NBL_PLATFORM_LINUX)
 
 #include <pthread.h>
 #include <atomic>
+
+#elif defined(NBL_PLATFORM_WINDOWS)
+
+#include <synchapi.h>
 
 #endif
 
@@ -67,9 +71,11 @@ public:
 
 private:
 
-#ifdef NBL_PLATFORM_LINUX
+#if defined(NBL_PLATFORM_LINUX)
     pthread_mutex_t _mHandle;
-#else 
+#elif defined(NBL_PLATFORM_WINDOWS)
+    CRITICAL_SECTION _mHandle;
+#else
     void* _mHandle;
 #endif
     friend class Condition;
@@ -89,8 +95,11 @@ public:
     static Result create(Condition* out);
 
 private:
-#ifdef NBL_PLATFORM_LINUX
+
+#if defined(NBL_PLATFORM_LINUX)
     pthread_cond_t _mHandle;
+#elif defined(NBL_PLATFORM_WINDOWS)
+    CONDITION_VARIABLE _mHandle;
 #else
     void* _mHandle;
 #endif
@@ -110,11 +119,13 @@ public:
 
 private:
 
-#ifdef NBL_PLATFORM_LINUX
+#if defined(NBL_PLATFORM_LINUX)
     pthread_mutex_t _mMutex;
     pthread_cond_t _mCondition;
     std::atomic_int _mCount;
     bool _bInitialized;
+#elif defined(NBL_PLATFORM_WINDOWS)
+    volatile LONG _mCount;
 #else
     void* _mHandle;
 #endif

@@ -22,6 +22,10 @@
  */
 
 
+#include <Platform/PlatformDefines.hpp>
+
+#if defined(NBL_PLATFORM_LINUX)
+
 #include <Platform/Socket.hpp>
 
 #include "LinuxUtil.hpp"
@@ -34,7 +38,7 @@
 
 namespace {
 
-    int gGetFd(void* handle) {
+int gGetFd(void* handle) {
     return static_cast<int>(reinterpret_cast<intptr_t>(handle));
 }
 
@@ -162,3 +166,4 @@ nbl::Result nbl::ServerSocket::listen(u16 port, SocketType type, ServerSocket *o
 
 }
 
+#endif

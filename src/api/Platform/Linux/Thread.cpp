@@ -21,6 +21,10 @@
  * \brief Implementation of Platform/Process.hpp for Linux.
  */
 
+#include <Platform/PlatformDefines.hpp>
+
+#ifdef NBL_PLATFORM_LINUX
+
 #include <Core/Result.hpp>
 #include <Platform/Process.hpp>
 #include <Core/Assert.hpp>
@@ -143,3 +147,5 @@ nbl::Result nbl::Thread::create(EntryPointFn function, void* userData, Thread* o
     return nbl::Result::SUCCESS;
 
 }
+
+#endif 

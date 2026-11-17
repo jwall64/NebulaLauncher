@@ -248,6 +248,16 @@ nbl::Result nbl::FolderIterator::create(StringView path, FolderIterator* outIter
     return nbl::Result::SUCCESS;
 }
 
+
+void nbl::FolderIterator::_close() {
+    ::closedir(static_cast<DIR*>(_mHandle));
+}
+
+void nbl::FolderIterator::rewind() {
+    ::rewinddir(static_cast<DIR*>(_mHandle));
+}
+
+
 nbl::Result nbl::makeDirectories(StringView path) {
 
     if(path.length() == 0 || path.length() >= PATH_MAX) return nbl::Result::INVALID_ARGUMENT;
@@ -456,12 +466,5 @@ nbl::Result nbl::setOpenFileLimit(u64 limit) {
     return nbl::Result::SUCCESS;
 }
 
-void nbl::FolderIterator::_close() {
-    ::closedir(static_cast<DIR*>(_mHandle));
-}
-
-void nbl::FolderIterator::_rewind() {
-    ::rewinddir(static_cast<DIR*>(_mHandle));
-}
 
 #endif

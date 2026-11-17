@@ -29,6 +29,10 @@
 #include <Core/Result.hpp>
 #include <Core/Span.hpp>
 
+
+#include <Platform/PlatformDefines.hpp>
+
+
 namespace nbl {
 
 StringView getHostName();
@@ -216,6 +220,7 @@ public:
     static Result fromPid(i32 pid, ProcessHandle* outHandle);
 
 private:
+
     void* _pHandle;
     void* _pOutputHandle;
 };

@@ -46,15 +46,22 @@ CPMAddPackage(
         "BUILD_GMOCK OFF"
 )
 
+set(NBL_CMAKE_OPTIONS 
+    "BUILD_CURL_EXE OFF" 
+    "BUILD_SHARED_LIBS OFF" 
+    "CMAKE_USE_OPENSSL ON" 
+    "CMAKE_POSITION_INDEPENDENT_CODE ON"
+)
+
+if(WIN32)
+    list(APPEND NBL_CMAKE_OPTIONS "CURL_USE_LIBPSL OFF")
+endif()
+
 CPMAddPackage(
     NAME curl
     GIT_REPOSITORY "https://github.com/curl/curl"
     GIT_TAG "curl-8_20_0"
-    OPTIONS
-        "BUILD_CURL_EXE OFF"
-        "BUILD_SHARED_LIBS OFF"
-        "CMAKE_USE_OPENSSL ON"
-        "CMAKE_POSITION_INDEPENDENT_CODE ON"
+    OPTIONS ${NBL_CMAKE_OPTIONS}
 )
 
 find_package(OpenSSL REQUIRED)
@@ -113,6 +120,7 @@ if(${NBL_BUILD_TEST_PLUGIN})
     set_target_properties(Nebula_TestPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/test_plugin"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/test_plugin"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/test_plugin"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )
@@ -134,6 +142,7 @@ if(${NBL_BUILD_SGDB_PLUGIN})
     set_target_properties(Nebula_SgdbPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/sgdb"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/sgdb"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/sgdb"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )
@@ -154,6 +163,7 @@ if(${NBL_BUILD_IGDB_PLUGIN})
     set_target_properties(Nebula_IgdbPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/igdb"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/igdb"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/igdb"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )
@@ -176,6 +186,7 @@ if(${NBL_BUILD_RA_PLUGIN})
     set_target_properties(Nebula_RaPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/retroachievements"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/retroachievements"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/retroachievements"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )
@@ -200,6 +211,7 @@ if(${NBL_BUILD_MINECRAFT_PLUGIN})
     set_target_properties(Nebula_MinecraftPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/minecraft"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/minecraft"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/minecraft"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )
@@ -233,6 +245,7 @@ if(${NBL_BUILD_STEAM_PLUGIN})
     set_target_properties(Nebula_SteamAchievementClient PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
         PREFIX ""
         OUTPUT_NAME "AchievementClient"
     )
@@ -244,6 +257,7 @@ if(${NBL_BUILD_STEAM_PLUGIN})
     set_target_properties(Nebula_SteamPlugin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/plugins/steam"
         PREFIX ""
         OUTPUT_NAME "plugin"
     )

@@ -28,6 +28,15 @@
 #include <Core/Result.hpp>
 #include <Core/Stream.hpp>
 
+
+#if defined(NBL_PLATFORM_WINDOWS)
+#include <minwinbase.h>
+#define NBL_PATH_SEPARATOR '\\';
+#else
+#define NBL_PATH_SEPARATOR '/';
+#endif
+
+
 namespace nbl {
 
 enum class FileOpenFlag : u8 {
@@ -140,14 +149,23 @@ public:
     ~FolderIterator() { _close(); }
 
     bool next(StringView* name);
+    void rewind();
 
     static Result create(StringView path, FolderIterator* outIterator);
 
 private:
 
-    void _rewind();
     void _close();
+
+#if defined(NBL_PLATFORM_WINDOWS) 
+    HANDLE _mHandle;
+    Span<wchar_t> _mOriginalQuery;
+    StringView _mLastName;
+    bool _bPassedFirst;
+    Arena _mAlloc;
+#else
     void* _mHandle;
+#endif
 
 public:
 
@@ -179,7 +197,7 @@ public:
     };
 
     Iterator begin() {
-        _rewind();
+        rewind();
         Iterator out = {
             .currentName{},
             .it = this

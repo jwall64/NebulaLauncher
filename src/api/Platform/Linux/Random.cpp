@@ -21,13 +21,11 @@
  * \brief Implementation of Platform/Random.hpp for Linux.
  */
 
-
-
-#include <Platform/Random.hpp>
-
 #include <Platform/PlatformDefines.hpp>
 
 #ifdef NBL_PLATFORM_LINUX
+
+#include <Platform/Random.hpp>
 
 #include <fcntl.h>
 #include <stdlib.h>
