@@ -1,3 +1,6 @@
+#include <Platform/PlatformDefines.hpp>
+#ifdef NBL_PLATFORM_WINDOWS
+
 #include "WindowsUtil.hpp"
 
 #include <Core/Math.hpp>
@@ -33,3 +36,5 @@ nbl::Result nbl::win::readHandle(void* impl, void* data, usize length, usize* by
     }
     return nbl::Result::SUCCESS;
 }
+
+#endif

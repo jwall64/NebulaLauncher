@@ -21,6 +21,9 @@
  * \brief Implementation of Linux-specific utility functions.
  */
 
+#include <Platform/PlatformDefines.hpp>
+#ifdef NBL_PLATFORM_LINUX
+
 #include "LinuxUtil.hpp"
 #include <Core/Result.hpp>
 
@@ -60,3 +63,5 @@ nbl::Result nbl::linux::readFd(void* impl, void* data, usize length, usize* byte
     }
     return nbl::Result::SUCCESS;
 }
+
+#endif
