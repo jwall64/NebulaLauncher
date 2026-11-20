@@ -24,7 +24,7 @@
 
 #ifdef NBL_PLATFORM_WINDOWS
 
-#include <Windows.h>
+#include "WindowsUtil.hpp"
 
 #include <Platform/Time.hpp>
 
@@ -48,13 +48,25 @@ nbl::Result nbl::utcFromComponents(u32 year, u8 month, u8 day, u8 hour,
         return nbl::Result::INVALID_ARGUMENT;
 
 
-    SYSTEMTIME st = {};
+    SYSTEMTIME st{};
     st.wYear = static_cast<WORD>(year);
     st.wMonth = static_cast<WORD>(month);
     st.wDay = static_cast<WORD>(day);
     st.wHour = static_cast<WORD>(hour);
     st.wMinute = static_cast<WORD>(minute);
     st.wSecond = static_cast<WORD>(second);
+
+    FILETIME ft{};
+    if(!SystemTimeToFileTime(&st, &ft)) {
+        return nbl::Result::OS_ERROR;
+    }
+
+    ULARGE_INTEGER uli{};
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+
+    constexpr static u64 _diff = 116444736000000000ULL;
+    return (uli.QuadPart - _diff) / 10000ULL;
 }
 
 #endif

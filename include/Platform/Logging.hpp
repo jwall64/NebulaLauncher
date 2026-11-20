@@ -41,6 +41,14 @@
 #endif
 
 
+
+#pragma push_macro("stdout")
+#pragma push_macro("stderr")
+
+#undef stdout
+#undef stderr
+
+
 namespace nbl {
 
 /**
@@ -75,19 +83,20 @@ inline bool operator<(LogLevel l1, usize val) {
     return static_cast<usize>(l1) < val;
 }
 
-
-
 /**
  * \brief Logs a message to the standard output stream.
  * \param data The string view containing the message to be logged.
  */
 void stdout(StringView data);
 
+
 /**
  * \brief Logs a message to the standard error stream.
  * \param data The string view containing the message to be logged.
  */
 void stderr(StringView data);
+
+
 
 /**
  * \brief Returns a Writer object that can be used to write log messages to the standard output stream. This function provides a convenient way to write log messages using the Writer interface, allowing for more flexible and efficient logging.
@@ -109,7 +118,7 @@ Writer stderrWriter();
  * \param args The variadic list of arguments to be logged, which will be converted to their string representations and included in the log message.
  */
 template<typename... Args>
-inline void log(LogLevel level, Args&&... args) {
+inline void log(nbl::LogLevel level, Args&&... args) {
 
     thread_local static u8 _logBuffer[4096];
 
@@ -145,3 +154,7 @@ inline void log(LogLevel level, Args&&... args) {
 
 
 }
+
+
+#pragma pop_macro("stderr")
+#pragma pop_macro("stdout")

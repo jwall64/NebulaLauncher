@@ -33,6 +33,8 @@
 
 #include "WindowsUtil.hpp"
 
+#include <atomic>
+
 namespace {
 
 struct _ThreadData {
@@ -142,7 +144,7 @@ nbl::Result nbl::Thread::create(EntryPointFn function, void* userData, Thread* o
     threadData->userData = userData;
     threadData->refCount = 2;
 
-    int result = CreateThread(
+    threadData->handle = CreateThread(
         nullptr,
         0,
         _threadEntryPoint,
@@ -150,8 +152,8 @@ nbl::Result nbl::Thread::create(EntryPointFn function, void* userData, Thread* o
         0,
         nullptr);
 
-    if(result != 0) {
-        nbl::log(nbl::LogLevel::DEBUG, "Thread create failed: ", result);
+    if(threadData->handle == nullptr) {
+        nbl::log(nbl::LogLevel::DEBUG, "Thread create failed");
         _sThreadPool.pop(threadData);
         return nbl::Result::THREAD_ERROR;
     }

@@ -31,15 +31,15 @@
 #include "WindowsUtil.hpp"
 
 nbl::Mutex::~Mutex() {
-    DeleteCriticalSection(_mHandle);
+    DeleteCriticalSection(&_mHandle);
 }
 
 void nbl::Mutex::lock() {
-    EnterCriticalSection(_mHandle, INFINITE);
+    EnterCriticalSection(&_mHandle);
 }
 
 void nbl::Mutex::unlock() {
-    LeaveCriticalSection(_mHandle);
+    LeaveCriticalSection(&_mHandle);
 }
 
 nbl::Result nbl::Mutex::create(Mutex* out) {
@@ -56,19 +56,17 @@ nbl::Condition::~Condition() {
 }
 
 void nbl::Condition::signal() {
-    WakeConditionVariable(_mHandle);
+    WakeConditionVariable(&_mHandle);
 }
 void nbl::Condition::broadcast() {
-    WakeAllConditionVariable(_mHandle);
+    WakeAllConditionVariable(&_mHandle);
 }
 void nbl::Condition::wait(Mutex& mutex) {
-    SleepConditionVariableCS(_mHandle, &mutex._mHandle);
+    SleepConditionVariableCS(&_mHandle, &mutex._mHandle, INFINITE);
 }
 
 nbl::Result nbl::Condition::create(Condition* out) {
-    if(!InitializeConditionVariable(&out->_mHandle)) {
-        return nbl::Result::THREAD_ERROR;
-    }
+    InitializeConditionVariable(&out->_mHandle);
     return nbl::Result::SUCCESS;
 }
 
@@ -79,11 +77,11 @@ nbl::Latch::~Latch() {
 }
 
 void nbl::Latch::increment() {
-    InterlockedIncrement(_mCount);
+    InterlockedIncrement(&_mCount);
 }
 
 void nbl::Latch::decrement() {
-    InterlockedDecrement(_mCount);
+    InterlockedDecrement(&_mCount);
 }
 
 void nbl::Latch::wait() {
@@ -96,6 +94,7 @@ void nbl::Latch::wait() {
 
 nbl::Result nbl::Latch::create(usize count, Latch* out) {
     out->_mCount = count;
+    return nbl::Result::SUCCESS;
 }
 
 

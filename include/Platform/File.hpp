@@ -28,12 +28,13 @@
 #include <Core/Result.hpp>
 #include <Core/Stream.hpp>
 
+#include <Platform/Arena.hpp>
+#include <Platform/PlatformDefines.hpp>
 
 #if defined(NBL_PLATFORM_WINDOWS)
-#include <minwinbase.h>
-#define NBL_PATH_SEPARATOR '\\';
+#define NBL_PATH_SEPARATOR '\\'
 #else
-#define NBL_PATH_SEPARATOR '/';
+#define NBL_PATH_SEPARATOR '/'
 #endif
 
 
@@ -149,7 +150,7 @@ public:
     ~FolderIterator() { _close(); }
 
     bool next(StringView* name);
-    void rewind();
+    Result rewind();
 
     static Result create(StringView path, FolderIterator* outIterator);
 
@@ -157,61 +158,14 @@ private:
 
     void _close();
 
+    void* _mHandle;
+
 #if defined(NBL_PLATFORM_WINDOWS) 
-    HANDLE _mHandle;
     Span<wchar_t> _mOriginalQuery;
     StringView _mLastName;
     bool _bPassedFirst;
     Arena _mAlloc;
-#else
-    void* _mHandle;
 #endif
-
-public:
-
-    struct Iterator {
-        StringView currentName;
-        FolderIterator* it;
-
-        StringView operator*() {
-            return currentName;
-        }
-
-        Iterator& operator++() {
-            if(!it->next(&currentName)) {
-                currentName = {};
-            }
-            return *this;
-        }
-
-        Iterator operator++(int) {
-            Iterator out = *this;
-            operator++();
-            return out;
-        }
-
-        bool operator!=(const Iterator& other) {
-            return other.it == it && other.currentName == currentName;
-        }
-
-    };
-
-    Iterator begin() {
-        rewind();
-        Iterator out = {
-            .currentName{},
-            .it = this
-        };
-        out++;
-        return out;
-    }
-
-    Iterator end() {
-        return {
-            .currentName{},
-            .it = this
-        };
-    }
 
 };
 

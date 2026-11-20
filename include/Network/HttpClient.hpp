@@ -27,15 +27,13 @@
 #include <Core/Either.hpp>
 #include <Core/Optional.hpp>
 #include <Core/Result.hpp>
-#include <Platform/Process.hpp>
 #include <Platform/Arena.hpp>
 #include <Platform/Pool.hpp>
-#include <Platform/Pipe.hpp>
 #include <Platform/Mutex.hpp>
 #include <Platform/File.hpp>
-#include <Platform/PlatformDefines.hpp>
 #include <Utility/StringBuilder.hpp>
 
+#include <atomic>
 
 namespace nbl {
 

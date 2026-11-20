@@ -21,6 +21,8 @@
  * \brief Implementation of Network/HttpClient.hpp
  */
 
+#define NOGDI
+
 #include <Network/HttpClient.hpp>
 #include <Utility/StringBuilder.hpp>
 #include <Core/Result.hpp>
@@ -372,7 +374,6 @@ nbl::Result nbl::HttpClient::_startThread() {
                         }
 
                     } else {
-
                         nbl::log(nbl::LogLevel::ERROR, "HTTP connection failed! ", curl_easy_strerror(msg->data.result));
                         req->finished(nbl::Result::IO_ERROR, 0);
                         client->_mFailures++;

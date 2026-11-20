@@ -44,16 +44,16 @@ nbl::StringView nbl::getHostName() {
     static usize _length = 0;
     static char _hostName[256]{};
 
-    if(!_bComputed) {
+    if(_length == 0) {
 
         DWORD size;
         GetComputerNameExW(ComputerNamePhysicalDnsHostname, nullptr, &size);
-        NBL_ASSERT(GetLastError() != ERROR_MORE_DATA));
+        NBL_ASSERT(GetLastError() != ERROR_MORE_DATA);
 
         nbl::AllocationFrame frame(nbl::Arena::threadLocal());
         wchar_t* data;
         NBL_ASSERT(frame.allocate(&data, size));
-        NBL_ASSERT(GetComputerNameExW(ComputerNamePhysicalDnsHostname, data, &size)));
+        NBL_ASSERT(GetComputerNameExW(ComputerNamePhysicalDnsHostname, data, &size));
 
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, data, size, nullptr, 0, nullptr, nullptr);
         NBL_ASSERT(utfSize > 0);
@@ -85,10 +85,10 @@ nbl::StringView nbl::getEnv(nbl::StringView name) {
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
 
     if(!name.nullTerminated()) {
-        nbl::StringBuilder(frame).append(name).buildNullTerminated(&name);
+        nbl::StringBuilder(&frame).append(name).buildNullTerminated(&name);
     }
 
-    _length = GetEnvironmentVariable(name.data(), _smallBuffer, 256);
+    _length = GetEnvironmentVariable(name.data(), _data.smallBuffer, 256);
     if(_length == 0) {
         return {};
     }
@@ -120,7 +120,7 @@ void nbl::setEnv(StringView name, StringView value, bool overwrite) {
         StringBuilder(&frame).append(value).buildNullTerminated(&value);
     }
 
-    NBL_ASSERT(SetEnvironmentVariable(name.data(), value.data());
+    NBL_ASSERT(SetEnvironmentVariable(name.data(), value.data()));
 }
 
 
@@ -167,17 +167,18 @@ nbl::StringView nbl::getBinaryPath() {
 
 nbl::Result nbl::sleep(u32 millis) {
     Sleep(millis);
+    return Result::SUCCESS;
 }
 
 
 nbl::ProcessHandle::~ProcessHandle() {
     if(_pHandle) {
         CloseHandle(_pHandle);
-        _mProc.hProcess = nullptr;
+        _pHandle = nullptr;
     }
     if(captureOutput()) {
         HANDLE output = _pOutputHandle;
-        CloseHandle(fd);
+        CloseHandle(output);
         _pOutputHandle = nullptr;
     }
 }
@@ -187,8 +188,6 @@ nbl::Result nbl::ProcessHandle::wait(i32* exitCode) const {
 
     DWORD rc = WaitForSingleObject(_pHandle, INFINITE);
     if(rc != WAIT_OBJECT_0) {
-        CloseHandle(_pHandle);
-        _pHandle = nullptr;
         return nbl::Result::PROCESS_ERROR;
     }
 
@@ -198,9 +197,6 @@ nbl::Result nbl::ProcessHandle::wait(i32* exitCode) const {
 
         *exitCode = static_cast<i32>(ec);
     }
-
-    CloseHandle(_pHandle);
-    _pHandle = nullptr;
     return nbl::Result::SUCCESS;
 }
 
@@ -218,7 +214,7 @@ bool nbl::ProcessHandle::isRunning() const {
 void nbl::ProcessHandle::terminate() {
     if(_pHandle == nullptr) return;
     TerminateProcess(_pHandle, 1);
-    WaitForSingleObject(_pHandle);
+    WaitForSingleObject(_pHandle, INFINITE);
     CloseHandle(_pHandle);
     _pHandle = nullptr;
 }
@@ -266,10 +262,10 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
     nbl::StringView commandLine{};
 
-    nbl::StringBuilder builder(frame);
-    frame.append('"').append(path).append('"');
+    nbl::StringBuilder builder(&frame);
+    builder.append('"').append(path).append('"');
     for(StringView arg : args) {
-        frame.append(" \"").append(arg).append('"');
+        builder.append(" \"").append(arg).append('"');
     }
 
     NBL_CHECK(builder.build(&commandLine));
@@ -324,25 +320,28 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
             }
         }
 
-        
-        quicksort(indices, [&](usize i1, usize i2) {
-            return CompareStringOrdinal(
+        auto cmp = [&](const usize& i1, const usize& i2) -> i32 {
+            i32 out = CompareStringOrdinal(
                 vars[i1].data(), static_cast<int>(vars[i1].length()), 
-                vars[i2.data()], static_cast<int>(vars[i2.length()]), 
+                vars[i2].data(), static_cast<int>(vars[i2].length()), 
                 TRUE) == CSTR_LESS_THAN;
-        });
+            return out;
+        };
+        std::function_ref<i32(const usize&, const usize&)> compareFunc = cmp;
+        
+        quicksort(indices, compareFunc);
 
 
         usize current = 0;
         
-        LPCWSTR parentEnv = GetEnvironmentStringsW();
+        LPWCH parentEnv = GetEnvironmentStringsW();
 
         env = frame.end();
 
         while(true) {
 
             wchar_t* sep = nullptr;
-            if(parentEnv[parentIndex] == L'=') {
+            if(parentEnv[0] == L'=') {
                 sep = wcschr(parentEnv + 1, L'=');
             }
             else {
@@ -368,13 +367,13 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
                 frame.allocate(&appended, currentVar.length() + 1 + currentValue.length() + 1);
                 memcpy(appended, currentVar.data(), currentVar.length() * sizeof(wchar_t));
                 appended[currentVar.length() * sizeof(wchar_t)] = L'=';
-                memcpy(appended + (currentVar.length() + 1) * sizeof(wchar_t), currentValue.data(), currentValue.length() * sizeof(wchar_t));
+                memcpy(appended + (currentVar.length() + 1), currentValue.data(), currentValue.length() * sizeof(wchar_t));
                 appended[(currentVar.length() + 1 + currentValue.length()) * sizeof(wchar_t)] = L'\0';
 
                 current++;
             }
 
-            wchar_t* end = wschr(parentEnv, L'\0');
+            wchar_t* end = wcschr(parentEnv, L'\0');
             usize diff = 0;
             if(end == nullptr) {
                 diff = wcslen(parentEnv);
@@ -432,8 +431,8 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
 
     STARTUPINFOW startupInfo = {
         .cb = sizeof(STARTUPINFOW),
-        .hStdInput = nulHandle,
-        .dwFlags = STARTF_USESTDHANDLES | 0
+        .dwFlags = STARTF_USESTDHANDLES | 0,
+        .hStdInput = nulHandle
     };
 
 
@@ -463,7 +462,7 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
             startupInfo.hStdOutput = pipeWriter;
             startupInfo.hStdError = nulHandle;
 
-            out->_pOutputHandle = pipeReader;
+            outHandle->_pOutputHandle = pipeReader;
             break;
         }
         case ProcessOutputMode::NULLIFY: {
@@ -525,11 +524,13 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
     if(pipeWriter) CloseHandle(pipeWriter);
 
     CloseHandle(processInfo.hThread);
-    out->_pHandle = processInfo.hProcess;
+    outHandle->_pHandle = processInfo.hProcess;
+
+    return nbl::Result::SUCCESS;
 }
 
 nbl::Result nbl::ProcessHandle::fromPid(i32 pid, nbl::ProcessHandle* out) {
-    out->_pHandle = OpenProcess(pid);
+    out->_pHandle = OpenProcess(READ_CONTROL, false, pid);
     return nbl::Result::SUCCESS;
 }
 

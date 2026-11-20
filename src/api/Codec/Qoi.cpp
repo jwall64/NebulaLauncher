@@ -23,11 +23,18 @@
 
 #include <Codec/Qoi.hpp>
 
+#include <Core/Result.hpp>
+#include <Platform/Allocator.hpp>
+#include <Platform/PlatformDefines.hpp>
+
+#ifdef NBL_PLATFORM_WINDOWS
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
+
 #include <utility>
 #include <cstring>
-#include "Core/Result.hpp"
-#include "Platform/Allocator.hpp"
 
 namespace {
 

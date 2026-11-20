@@ -30,6 +30,7 @@
 #include <Data/Database.hpp>
 #include <Network/HttpClient.hpp>
 #include <Platform/Allocator.hpp>
+#include <Platform/Time.hpp>
 #include <Utility/StringBuilder.hpp>
 #include <Plugin/Field.hpp>
 #include <Plugin/PluginInitializer.hpp>
@@ -37,7 +38,6 @@
 #include <Plugin/AccountProvider.hpp>
 
 #include "Constants.hpp"
-#include "Platform/Time.hpp"
 #include "Utility.hpp"
 #include "Profile.hpp"
 

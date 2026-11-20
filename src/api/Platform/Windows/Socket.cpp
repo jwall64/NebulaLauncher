@@ -38,13 +38,13 @@ SOCKET _getSocket(void* handle) {
 }
 
 nbl::Result _writeSocket(void* impl, const void* data, usize length, usize* bytesWritten) {
-    int rc = send(_getSocket(impl), data, length, 0);
+    int rc = send(_getSocket(impl), static_cast<const char*>(data), length, 0);
     if(rc == SOCKET_ERROR) return nbl::Result::IO_ERROR;
     if(bytesWritten) *bytesWritten = rc;
     return nbl::Result::SUCCESS;
 }
 nbl::Result _readSocket(void* impl, void* data, usize length, usize* bytesRead) {
-    int rc = recv(_getSocket(impl), data, length, 0);
+    int rc = recv(_getSocket(impl), static_cast<char*>(data), length, 0);
     if(rc == SOCKET_ERROR) return nbl::Result::IO_ERROR;
     if(bytesRead) *bytesRead = rc;
     return nbl::Result::SUCCESS;
@@ -95,7 +95,9 @@ nbl::Result nbl::Socket::connectIPv4(u32 address, u16 port, SocketType type, Soc
         .sin_family = AF_INET,
         .sin_port = htons(port),
         .sin_addr = {
-            .s_addr = address
+            .S_un = {
+                .S_addr = address
+            }
         }
     };
 
@@ -113,7 +115,7 @@ nbl::Result nbl::ServerSocket::accept(Socket* client) {
 
     SOCKET serverSock = static_cast<SOCKET>(reinterpret_cast<intptr_t>(_mHandle));
     SOCKET clientSock;
-    if((clientSock = accept(serverSock, nullptr, nullptr)) < 0) {
+    if((clientSock = ::accept(serverSock, nullptr, nullptr)) < 0) {
         return nbl::Result::IO_ERROR;
     }
 
@@ -155,7 +157,9 @@ nbl::Result nbl::ServerSocket::listen(u16 port, SocketType type, ServerSocket *o
         .sin_family = AF_INET,
         .sin_port = htons(port),
         .sin_addr = {
-            .s_addr = INADDR_ANY
+            .S_un = {
+                .S_addr = INADDR_ANY
+            }
         }
     };
 
@@ -164,7 +168,7 @@ nbl::Result nbl::ServerSocket::listen(u16 port, SocketType type, ServerSocket *o
         return nbl::Result::IO_ERROR;
     }
 
-    if(listen(sock, 10) < 0) {
+    if(::listen(sock, 10) < 0) {
         closesocket(sock);
         return nbl::Result::IO_ERROR;
     }

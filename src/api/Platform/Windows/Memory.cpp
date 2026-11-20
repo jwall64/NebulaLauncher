@@ -43,7 +43,7 @@ usize nbl::pageSize() noexcept {
 nbl::Result nbl::mapMemory(usize* size, void** outPtr) noexcept {
     if(outPtr == nullptr || size == nullptr || *size == 0) return nbl::Result::INVALID_ARGUMENT;
 
-    *size = nbl::alignUp(*size, getpagesize());
+    *size = nbl::alignUp(*size, pageSize());
     void* out = VirtualAlloc(nullptr, *size, MEM_RESERVE, PAGE_NOACCESS);
     if(out == nullptr) return nbl::Result::OUT_OF_MEMORY;
 
@@ -54,7 +54,7 @@ nbl::Result nbl::mapMemory(usize* size, void** outPtr) noexcept {
 nbl::Result nbl::unmapMemory(void* ptr, usize* size) noexcept {
     if(ptr == nullptr || size == nullptr || *size == 0) return nbl::Result::INVALID_ARGUMENT;
 
-    *size = nbl::alignUp(*size, getpagesize());
+    *size = nbl::alignUp(*size, pageSize());
     if(!VirtualFree(ptr, *size, MEM_RELEASE)) {
         return nbl::Result::INVALID_ARGUMENT;
     }
@@ -66,7 +66,7 @@ nbl::Result nbl::commitMemory(void* ptr, usize* size) noexcept {
     NBL_ASSERT(size != nullptr);
     NBL_ASSERT(*size != 0);
 
-    *size = nbl::alignUp(*size, getpagesize());
+    *size = nbl::alignUp(*size, pageSize());
     void* newPtr = VirtualAlloc(ptr, *size, MEM_COMMIT, PAGE_READWRITE);
 
     if(newPtr == nullptr) {
@@ -81,7 +81,7 @@ nbl::Result nbl::commitMemory(void* ptr, usize* size) noexcept {
 nbl::Result nbl::uncommitMemory(void* ptr, usize* size) noexcept {
     if(ptr == nullptr || size == nullptr || *size == 0) return nbl::Result::INVALID_ARGUMENT;
 
-    *size = nbl::alignUp(*size, getpagesize());
+    *size = nbl::alignUp(*size, pageSize());
     if(!VirtualFree(ptr, *size, MEM_DECOMMIT)) {
         return nbl::Result::INVALID_ARGUMENT;
     }

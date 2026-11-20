@@ -46,10 +46,16 @@ CPMAddPackage(
         "BUILD_GMOCK OFF"
 )
 
+CPMAddPackage(
+    NAME openssl-cmake
+    GIT_REPOSITORY "https://github.com/jimmy-park/openssl-cmake"
+    GIT_TAG "4.1.0"
+)
+
 set(NBL_CMAKE_OPTIONS 
     "BUILD_CURL_EXE OFF" 
     "BUILD_SHARED_LIBS OFF" 
-    "CMAKE_USE_OPENSSL ON" 
+    "CURL_USE_OPENSSL ON" 
     "CMAKE_POSITION_INDEPENDENT_CODE ON"
 )
 
@@ -64,8 +70,6 @@ CPMAddPackage(
     OPTIONS ${NBL_CMAKE_OPTIONS}
 )
 
-find_package(OpenSSL REQUIRED)
-
 include(cmake/SQLite3.cmake)
 
 
@@ -77,7 +81,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Targets
 #
 
-if(WIN32)
+if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /Entry:WinMainCRTStartup")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /Subsystem:Windows")
 endif()
@@ -95,6 +99,14 @@ target_precompile_headers(Nebula_Api PUBLIC ${NBL_API_HEADERS})
 target_link_libraries(Nebula_Api PRIVATE CURL::libcurl)
 target_link_libraries(Nebula_Api PRIVATE OpenSSL::Crypto)
 target_link_libraries(Nebula_Api PRIVATE SQLite3::SQLite3)
+
+if(WIN32)
+    target_link_libraries(Nebula_Api PUBLIC
+        synchronization
+        ws2_32
+        bcrypt
+    )
+endif()
 
 if(NBL_ENABLE_ASAN)
     if(MSVC)

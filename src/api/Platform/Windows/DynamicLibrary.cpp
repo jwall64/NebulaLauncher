@@ -47,7 +47,7 @@ nbl::StringView nbl::executableFileExt() {
 
 nbl::DynamicLibrary::~DynamicLibrary() {
     if(_pHandle) {
-        ::dlclose(_pHandle);
+        FreeLibrary(*reinterpret_cast<HMODULE*>(&_pHandle));
         _pHandle = nullptr;
     }
 }
@@ -58,14 +58,14 @@ nbl::Result nbl::DynamicLibrary::_findSymbol(StringView name, void** outSym) {
     nbl::StringView zName;
     NBL_CHECK(nbl::StringBuilder::nullTerminate(name, &zName, &frame));
 
-    void* sym = GetProcAddress(_pHandle, name.data());
+    FARPROC sym = GetProcAddress(*reinterpret_cast<HMODULE*>(&_pHandle), name.data());
 
     if(sym == nullptr) {
         nbl::log(nbl::LogLevel::ERROR, "Failed to find symbol: ", name);
         return nbl::Result::IO_ERROR;
     }
 
-    *outSym = sym;
+    *outSym = reinterpret_cast<void*>(sym);
     return nbl::Result::SUCCESS;
 }
 

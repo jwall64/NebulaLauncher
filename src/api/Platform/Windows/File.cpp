@@ -35,7 +35,8 @@
 #include <Utility/StringBuilder.hpp>
 
 #include "WindowsUtil.hpp"
-#include <ShlObj.h>
+
+#include <shlobj.h>
 #include <aclapi.h>
 
 
@@ -97,8 +98,11 @@ nbl::Result nbl::FileChannel::seek(isize offset, FileSeekOrigin origin, usize* o
 
 nbl::Result nbl::FileChannel::offset(usize* outOffset) {
 
-    LARGE_INTEGER newPtr;
-    if(!SetFilePointerEx(_mHandle, 0, &newPtr, FILE_CURRENT)) {
+    LARGE_INTEGER dist{};
+    dist.QuadPart = 0;
+
+    LARGE_INTEGER newPtr{};
+    if(!SetFilePointerEx(_mHandle, dist, &newPtr, FILE_CURRENT)) {
         return nbl::Result::IO_ERROR;
     }
     if(outOffset) {
@@ -129,7 +133,7 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
 
         if(flags & FileOpenFlag::CREATE_PARENTS) {
             usize last = 0;
-            NBL_CHECK(path.findLast(NBL_PATH_SEPARATOR, &last));
+            NBL_CHECK(path.findLast('\\', &last));
             NBL_CHECK(makeDirectories(path.slice(0, last)));
         }
     }
@@ -158,7 +162,7 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
         fileName,
         desiredAccess,
         FILE_SHARE_READ,
-        &security,
+        nullptr,
         creationDisposition,
         0,
         nullptr
@@ -193,7 +197,7 @@ nbl::StringView nbl::getWorkingDirectory() {
         AllocationFrame frame = Arena::threadLocal();
         frame.allocate(&temp, wsize);
 
-        wsize = GetCurrentDirectory(wsize, temp);
+        wsize = GetCurrentDirectoryW(wsize, temp);
 
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, temp, wsize, nullptr, 0, nullptr, nullptr);
         if(utfSize <= 0) return {};
@@ -218,10 +222,7 @@ nbl::StringView nbl::getDataDirectory() {
         PWSTR path = nullptr;
         HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path);
 
-        if(!(SUCCEEDED(hr))) {
-            return nbl::Result::OS_ERROR;
-        }
-
+        NBL_ASSERT(SUCCEEDED(hr));
         DWORD len = wcslen(path);
    
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, path, len, nullptr, 0, nullptr, nullptr);
@@ -271,12 +272,12 @@ nbl::StringView nbl::getTempDirectory() {
 bool nbl::FolderIterator::next(StringView* name) {
 
     if(_bPassedFirst) {
-        WIN32_FIND_DATA data;
-        if(!FindNextFileA(_mHandle, &data)) {
+        WIN32_FIND_DATAW data{};
+        if(!FindNextFileW(_mHandle, &data)) {
             return false;
         }
 
-        _mAlloc.popTo(_mLastName.begin());
+        _mAlloc.popToPtr(_mLastName.begin());
 
         DWORD fileNameLen = wcslen(data.cFileName);
 
@@ -307,16 +308,15 @@ nbl::Result nbl::FolderIterator::create(StringView path, FolderIterator* outIter
     wchar_t* folderPath;
 
     outIterator->_mAlloc.allocate(&folderPath, sz + 3);
-    if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), workingDir, sz)) {
+    if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), folderPath, sz)) {
         return Result::INVALID_ARGUMENT;
     }
     folderPath[sz] = L'\\';
     folderPath[sz + 1] = L'*';
     folderPath[sz + 2] = L'\0';
 
-    out->_mOriginalQuery = Span<wchar_t>(folderPath, sz + 2);
-
-    _rewind();
+    outIterator->_mOriginalQuery = Span<wchar_t>(folderPath, sz + 2);
+    outIterator->rewind();
 
     return nbl::Result::SUCCESS;
 }
@@ -327,16 +327,16 @@ void nbl::FolderIterator::_close() {
     _mAlloc.popTo(0);
 }
 
-void nbl::FolderIterator::rewind() {
+nbl::Result nbl::FolderIterator::rewind() {
 
     if(_mHandle) {
         FindClose(_mHandle);
     }
     if(!_mLastName.empty()) {
-        _mAlloc.popTo(_mLastName.begin());
+        _mAlloc.popToPtr(_mLastName.begin());
     }
 
-    WIN32_FIND_DATA data;
+    WIN32_FIND_DATAW data;
     HANDLE handle = FindFirstFileW(_mOriginalQuery.data(), &data);
 
     if(handle == INVALID_HANDLE_VALUE) {
@@ -354,9 +354,11 @@ void nbl::FolderIterator::rewind() {
     WideCharToMultiByte(CP_UTF8, 0, data.cFileName, fileNameLen, fileName, utfSize, nullptr, nullptr);
     if(utfSize <= 0) return nbl::Result::IO_ERROR;
 
-    outIterator->_mHandle = handle;
-    outIterator->_bPassedFirst = false;
-    outIterator->_mLastName = StringView(fileName, utfSize);
+    _mHandle = handle;
+    _bPassedFirst = false;
+    _mLastName = StringView(fileName, utfSize);
+
+    return nbl::Result::SUCCESS;
 }
 
 
@@ -432,7 +434,7 @@ bool nbl::fileExists(StringView path) {
         return Result::INVALID_ARGUMENT;
     }
 
-    DWORD attributes = GetFileAttributes(wpath);
+    DWORD attributes = GetFileAttributesW(wpath);
     return attributes != INVALID_FILE_ATTRIBUTES;
 }
 
@@ -487,8 +489,10 @@ bool nbl::isExecutable(StringView path) {
 
     if(h != INVALID_HANDLE_VALUE) {
         CloseHandle(h);
-        return true;
+        return false;
     }
+
+    return true;
 }
 
 nbl::Result nbl::setExecutable(StringView path) {
@@ -540,7 +544,7 @@ nbl::Result nbl::setExecutable(StringView path) {
     }
 
     rc = SetNamedSecurityInfoW(
-        filePath,
+        wpath,
         SE_FILE_OBJECT,
         DACL_SECURITY_INFORMATION,
         nullptr, nullptr, newDacl, nullptr
@@ -655,7 +659,7 @@ nbl::Result nbl::setModifyTime(StringView path, u64 modifyTime) {
     ft.dwHighDateTime = li.HighPart;
     ft.dwLowDateTime = li.LowPart;
 
-    if(!SetFileTime(hFile, nullptr, nullptr, &ft)) {
+    if(!SetFileTime(h, nullptr, nullptr, &ft)) {
         return Result::IO_ERROR;
     }
     return nbl::Result::SUCCESS;

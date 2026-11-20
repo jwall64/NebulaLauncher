@@ -29,6 +29,8 @@
 #include <Platform/Mutex.hpp>
 #include <Core/Array.hpp>
 
+#include <atomic>
+
 namespace nbl {
 
 

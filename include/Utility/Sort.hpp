@@ -3,7 +3,9 @@
 #include <Core/Span.hpp>
 
 #include <utility>
+#include <functional>
 
+namespace nbl {
 
 template<typename T>
 void quicksort(Span<T> values, std::function_ref<i32(const T&, const T&)> compareFunc = [](const T& t1, const T& t2) { return t1 < t2; }) {
@@ -25,5 +27,7 @@ void quicksort(Span<T> values, std::function_ref<i32(const T&, const T&)> compar
 
     quicksort(values.slice(0, pivotIndex - 1), compareFunc);
     quicksort(values.slice(pivotIndex + 1), compareFunc);
+
+}
 
 }

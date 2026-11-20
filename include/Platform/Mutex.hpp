@@ -38,6 +38,7 @@
 #elif defined(NBL_PLATFORM_WINDOWS)
 
 #include <synchapi.h>
+#undef ERROR
 
 #endif
 
