@@ -165,7 +165,7 @@ nbl::Result nbl::MediaManager::loadImage(i64 refId, ImageLoadCallback callback, 
             i64 device = values[4].intValue;
 
             return callback({
-                .imageClass = values[5].intValue,
+                .imageClass = static_cast<ImageClass>(values[5].intValue),
                 .isPresent = false,
                 .referenceData = {
                     .imageUrl = url,
@@ -193,7 +193,7 @@ nbl::Result nbl::MediaManager::loadImage(i64 refId, ImageLoadCallback callback, 
             NBL_CHECK(nbl::QoiImageMeta::decodeImageData(qoiData, meta, imageSpan));
 
             return callback({
-                .imageClass = values[5].intValue,
+                .imageClass = static_cast<ImageClass>(values[5].intValue),
                 .isPresent = true,
                 .imageData = {
                     .pixels = imageSpan,

@@ -484,7 +484,7 @@ OFFSET ?4;
             .icon = columnValues[9].intValue,
             .releaseDate = columnValues[10].uintValue(),
             .rating = columnValues[11].floatValue,
-            .filter = {
+            .filter = nbl::Filter{
                 .criteria = {
                     .gameId = gameId
                 }

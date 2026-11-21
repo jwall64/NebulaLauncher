@@ -22,7 +22,7 @@ namespace nbl {
 
 
 struct HostDevice;
-typedef std::function_ref<Result(const HostDevice&)> DeviceCallback;
+typedef nbl::FunctionRef<Result(const HostDevice&)> DeviceCallback;
 
 
 struct HostDevice {

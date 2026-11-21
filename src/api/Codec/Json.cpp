@@ -177,7 +177,7 @@ nbl::Result nbl::JsonObject::Builder::add(StringView key, JsonElement element) {
 
     return nbl::Result::SUCCESS;
 }
-nbl::Result nbl::JsonObject::Builder::addObject(StringView key, std::function_ref<Result(JsonObject::Builder&)> callback, usize buckets) {
+nbl::Result nbl::JsonObject::Builder::addObject(StringView key, nbl::FunctionRef<Result(JsonObject::Builder&)> callback, usize buckets) {
 
     JsonObject::Entry* entry = nullptr;
     JsonObject obj{};
@@ -194,7 +194,7 @@ nbl::Result nbl::JsonObject::Builder::addObject(StringView key, std::function_re
     return nbl::Result::SUCCESS;
 
 }
-nbl::Result nbl::JsonObject::Builder::addArray(StringView key, std::function_ref<Result(JsonArray::Builder&)> callback) {
+nbl::Result nbl::JsonObject::Builder::addArray(StringView key, nbl::FunctionRef<Result(JsonArray::Builder&)> callback) {
 
     JsonObject::Entry* entry = nullptr;
     JsonArray arr{};
@@ -277,7 +277,7 @@ nbl::Result nbl::JsonArray::Builder::add(JsonElement element) {
     return nbl::Result::SUCCESS;
 
 }
-nbl::Result nbl::JsonArray::Builder::addObject(std::function_ref<Result(JsonObject::Builder&)> callback) {
+nbl::Result nbl::JsonArray::Builder::addObject(nbl::FunctionRef<Result(JsonObject::Builder&)> callback) {
 
     JsonElement* entry = nullptr;
     JsonObject obj{};
@@ -292,7 +292,7 @@ nbl::Result nbl::JsonArray::Builder::addObject(std::function_ref<Result(JsonObje
     return nbl::Result::SUCCESS;
 
 }
-nbl::Result nbl::JsonArray::Builder::addArray(std::function_ref<Result(JsonArray::Builder&)> callback) {
+nbl::Result nbl::JsonArray::Builder::addArray(nbl::FunctionRef<Result(JsonArray::Builder&)> callback) {
 
     JsonElement* entry = nullptr;
     JsonArray arr{};

@@ -58,8 +58,8 @@ nbl::Result nbl::frontend::GameSearchModel::_fetchPageData(qsizetype limit, qsiz
     
     nbl::StringView query = nbl::StringView(_mSearchQuery.data(), _mSearchQuery.length());
 
-    QList<_Row> found;
-    bool exactMatch;
+    QList<_Row> found{};
+    bool exactMatch = false;
     found.reserve(limit);
 
     nbl::SearchCriteria criteria = {

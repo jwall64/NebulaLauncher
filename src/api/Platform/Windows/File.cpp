@@ -246,14 +246,14 @@ nbl::StringView nbl::getTempDirectory() {
 
     if(_length == 0) {
 
-        DWORD wsize = GetTempPath2W(0, nullptr);
+        DWORD wsize = GetTempPathW(0, nullptr);
         if(wsize == 0) return {};
 
         wchar_t* temp;
         AllocationFrame frame = Arena::threadLocal();
         frame.allocate(&temp, wsize);
 
-        wsize = GetTempPath2W(wsize, temp);
+        wsize = GetTempPathW(wsize, temp);
 
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, temp, wsize, nullptr, 0, nullptr, nullptr);
         if(utfSize <= 0) return {};
@@ -282,13 +282,13 @@ bool nbl::FolderIterator::next(StringView* name) {
         DWORD fileNameLen = wcslen(data.cFileName);
 
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, data.cFileName, fileNameLen, nullptr, 0, nullptr, nullptr);
-        if(utfSize <= 0) return nbl::Result::IO_ERROR;
+        if(utfSize <= 0) return false;
 
         char* fileName;
         NBL_CHECK(_mAlloc.allocate(&fileName, utfSize));
 
         WideCharToMultiByte(CP_UTF8, 0, data.cFileName, fileNameLen, fileName, utfSize, nullptr, nullptr);
-        if(utfSize <= 0) return nbl::Result::IO_ERROR;
+        if(utfSize <= 0) return false;
 
         _mLastName = StringView(fileName, utfSize);
     }
@@ -367,7 +367,7 @@ nbl::Result nbl::makeDirectories(StringView path) {
 
     if(path.length() == 0) return nbl::Result::INVALID_ARGUMENT;
 
-    char temp[PATH_MAX] = {};
+    char temp[MAX_PATH] = {};
     memcpy(temp, path.data(), path.length());
 
     StringView stackPath = StringView(temp, path.length());
@@ -420,18 +420,18 @@ nbl::Result nbl::makeDirectories(StringView path) {
 
 bool nbl::fileExists(StringView path) {
 
-    if(path.length() == 0) return nbl::Result::INVALID_ARGUMENT;
+    if(path.length() == 0) return false;
 
     AllocationFrame frame(Arena::threadLocal());
 
     usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), nullptr, 0);
-    if(sz == 0) return Result::INVALID_ARGUMENT;
+    if(sz == 0) return false;
 
     wchar_t* wpath;
 
     frame.allocate(&wpath, sz + 1);
     if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), wpath, sz)) {
-        return Result::INVALID_ARGUMENT;
+        return false;
     }
 
     DWORD attributes = GetFileAttributesW(wpath);
@@ -464,18 +464,18 @@ nbl::Result nbl::deleteFile(StringView path) {
 
 bool nbl::isExecutable(StringView path) {
 
-    if(path.length() == 0) return nbl::Result::INVALID_ARGUMENT;
+    if(path.length() == 0) return false;
 
     AllocationFrame frame(Arena::threadLocal());
 
     usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), nullptr, 0);
-    if(sz == 0) return Result::INVALID_ARGUMENT;
+    if(sz == 0) return false;
 
     wchar_t* wpath;
 
     frame.allocate(&wpath, sz + 1);
     if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), wpath, sz)) {
-        return Result::INVALID_ARGUMENT;
+        return false;
     }
 
     HANDLE h = CreateFileW(
@@ -526,6 +526,10 @@ nbl::Result nbl::setExecutable(StringView path) {
         return Result::SUCCESS;
     }
 
+    wchar_t users[6]{
+        L'U', L's', L'e', L'r', L's', L'\0'
+    };
+
     EXPLICIT_ACCESS_W ea = {
         .grfAccessPermissions = FILE_GENERIC_EXECUTE,
         .grfAccessMode = GRANT_ACCESS,
@@ -533,7 +537,7 @@ nbl::Result nbl::setExecutable(StringView path) {
         .Trustee = {
             .TrusteeForm = TRUSTEE_IS_NAME,
             .TrusteeType = TRUSTEE_IS_UNKNOWN,
-            .ptstrName = L"Users"
+            .ptstrName = users
         }
     };
 
@@ -668,6 +672,7 @@ nbl::Result nbl::setModifyTime(StringView path, u64 modifyTime) {
 nbl::Result nbl::getOpenFileLimit(u64* currentLimit, u64* maxLimit) {
     *currentLimit = 16711680;
     *maxLimit = 16711680;
+    return nbl::Result::SUCCESS;
 }
 
 nbl::Result nbl::setOpenFileLimit(u64 limit) {

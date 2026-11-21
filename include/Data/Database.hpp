@@ -30,7 +30,7 @@
 #include <Core/Optional.hpp>
 #include <Codec/Json.hpp>
 #include <Platform/Logging.hpp>
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
@@ -128,12 +128,12 @@ inline Result write(DataValue value, Writer writer) {
 /**
  * A callback called with untyped data from the database. The values might be numbers or null, but have all been cast to strings. 
  */
-typedef std::function_ref<Result(i32,const char**,const char**,i64)> DatabaseCallback;
+typedef nbl::FunctionRef<Result(i32,const char**,const char**,i64)> DatabaseCallback;
 
 /**
  * A callback called with typed data from the database.
  */
-typedef std::function_ref<Result(i32,DataValue*,const char**,i64)> TypedDatabaseCallback; 
+typedef nbl::FunctionRef<Result(i32,DataValue*,const char**,i64)> TypedDatabaseCallback; 
 
 
 class DatabaseConnection;

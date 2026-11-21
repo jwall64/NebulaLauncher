@@ -28,7 +28,7 @@
 #include <Data/Model.hpp>
 #include <Data/GameModel.hpp>
 
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
@@ -57,7 +57,7 @@ struct OnlineGameMeta {
 };
 
 
-typedef std::function_ref<Result(const OnlineGameMeta&)> OnlineGameCallback;
+typedef nbl::FunctionRef<Result(const OnlineGameMeta&)> OnlineGameCallback;
 
 struct GameProvider {
 
@@ -68,7 +68,7 @@ struct GameProvider {
     void* userData;
 
     bool canProvide(PluginContext* context, OnlineGameLookupInfo info) const {
-        if(!pfnCanProvide) return nbl::Result::PLUGIN_ERROR;
+        if(!pfnCanProvide) return false;
         return pfnCanProvide(context, info, userData);
     }
 

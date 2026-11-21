@@ -15,8 +15,10 @@
 cmake_minimum_required(VERSION 4.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 project(Nebula LANGUAGES C CXX)
 
@@ -46,31 +48,31 @@ CPMAddPackage(
         "BUILD_GMOCK OFF"
 )
 
-CPMAddPackage(
-    NAME openssl-cmake
-    GIT_REPOSITORY "https://github.com/jimmy-park/openssl-cmake"
-    GIT_TAG "4.1.0"
-)
+include(cmake/SQLite3.cmake)
+include(cmake/OpenSSL.cmake)
 
-set(NBL_CMAKE_OPTIONS 
+set(NBL_CURL_OPTIONS 
     "BUILD_CURL_EXE OFF" 
     "BUILD_SHARED_LIBS OFF" 
+    "BUILD_EXAMPLES OFF"
+    "BUILD_TESTING OFF"
+    "BUILD_LIBCURL_DOCS OFF"
+    "BUILD_MISC_DOCS OFF"
     "CURL_USE_OPENSSL ON" 
     "CMAKE_POSITION_INDEPENDENT_CODE ON"
 )
 
 if(WIN32)
-    list(APPEND NBL_CMAKE_OPTIONS "CURL_USE_LIBPSL OFF")
+    list(APPEND NBL_CURL_OPTIONS "CURL_USE_LIBPSL OFF")
 endif()
 
 CPMAddPackage(
     NAME curl
     GIT_REPOSITORY "https://github.com/curl/curl"
     GIT_TAG "curl-8_20_0"
-    OPTIONS ${NBL_CMAKE_OPTIONS}
+    OPTIONS ${NBL_CURL_OPTIONS}
 )
 
-include(cmake/SQLite3.cmake)
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -82,8 +84,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #
 
 if(MSVC)
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /Entry:WinMainCRTStartup")
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /Subsystem:Windows")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG};/Subsystem:Console;/Entry:mainCRTStartup")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE};/Subsystem:Windows;/Entry:mainCRTStartup")
 endif()
 
 set(NBL_SRC_DIR ${NBL_ROOT_DIR}/src)
@@ -101,6 +103,7 @@ target_link_libraries(Nebula_Api PRIVATE OpenSSL::Crypto)
 target_link_libraries(Nebula_Api PRIVATE SQLite3::SQLite3)
 
 if(WIN32)
+    set_target_properties(Nebula_Api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
     target_link_libraries(Nebula_Api PUBLIC
         synchronization
         ws2_32

@@ -39,6 +39,7 @@ public:
         QObject(parent),
         _bIsStopping(false),
         _mTracker{},
+        _mPrevState(ProcessTracker::State::NOT_STARTED),
         _mWatcherThread{},
         _mLogs("")
     { }

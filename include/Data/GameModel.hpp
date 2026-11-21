@@ -26,9 +26,9 @@ namespace nbl {
 struct Game;
 struct GameLookupResult;
 
-typedef std::function_ref<Result(const Game&)> GameCallback;
-typedef std::function_ref<Result(const GameLookupResult&)> GameLookupCallback;
-typedef std::function_ref<Result(i64 gameId, StringView platformName, StringView platformId)> GameExternalIdCallback;
+typedef nbl::FunctionRef<Result(const Game&)> GameCallback;
+typedef nbl::FunctionRef<Result(const GameLookupResult&)> GameLookupCallback;
+typedef nbl::FunctionRef<Result(i64 gameId, StringView platformName, StringView platformId)> GameExternalIdCallback;
 
 
 struct GameLookupResult {

@@ -42,7 +42,7 @@ inline TabFlags& operator&=(TabFlags& flags, TabFlag other) { flags = flags | ot
 
 
 struct Tab;
-typedef std::function_ref<Result(const Tab&)> TabCallback;
+typedef nbl::FunctionRef<Result(const Tab&)> TabCallback;
 
 
 struct Tab {

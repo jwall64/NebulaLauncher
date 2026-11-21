@@ -47,8 +47,8 @@ inline FilterFlags& operator|=(FilterFlags& flags, FilterFlag other) { flags = f
 
 
 struct Filter;
-typedef std::function_ref<Result(const Filter&)> FilterCallback;
-typedef std::function_ref<Result(const SearchCriteria&)> FilterCriteriaCallback;
+typedef nbl::FunctionRef<Result(const Filter&)> FilterCallback;
+typedef nbl::FunctionRef<Result(const SearchCriteria&)> FilterCriteriaCallback;
 
 struct Filter {
     i64 filterId;

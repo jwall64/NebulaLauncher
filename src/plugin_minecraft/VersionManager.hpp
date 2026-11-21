@@ -42,8 +42,8 @@ public:
     JsonObject loggingInfo(StringView key) const;
     JsonObject javaVersion() const;
 
-    Result enumerateArguments(StringView key, std::function_ref<Result(JsonElement)> argumentConsumer) const;
-    Result enumerateLibraries(std::function_ref<Result(JsonElement)> libraryConsumer) const;
+    Result enumerateArguments(StringView key, nbl::FunctionRef<Result(JsonElement)> argumentConsumer) const;
+    Result enumerateLibraries(nbl::FunctionRef<Result(JsonElement)> libraryConsumer) const;
 
     VersionRef* parent;
     JsonObject root;

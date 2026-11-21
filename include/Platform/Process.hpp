@@ -138,7 +138,7 @@ public:
 
     ProcessHandle() = default;
     ProcessHandle(const ProcessHandle& other) = delete;
-    ProcessHandle(ProcessHandle&& other) :
+    ProcessHandle(ProcessHandle&& other) noexcept :
         _pHandle(other._pHandle),
         _pOutputHandle(other._pOutputHandle)
     { 
@@ -149,7 +149,7 @@ public:
     ~ProcessHandle();
 
     ProcessHandle& operator=(const ProcessHandle& other) = delete;
-    ProcessHandle& operator=(ProcessHandle&& other) {
+    ProcessHandle& operator=(ProcessHandle&& other) noexcept {
 
         if(&other == this) return *this;
 

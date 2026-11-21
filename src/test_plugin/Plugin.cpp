@@ -64,7 +64,7 @@ u32 _index(nbl::PluginContext* pluginContext, nbl::StringView name, void* userDa
     return 0;
 }
 
-void _suggest(nbl::PluginContext* pluginContext, nbl::StringView current, std::function_ref<void(nbl::StringView)> suggestionConsumer, void* userData) {
+void _suggest(nbl::PluginContext* pluginContext, nbl::StringView current, nbl::FunctionRef<void(nbl::StringView)> suggestionConsumer, void* userData) {
 
     suggestionConsumer("Hello");
     suggestionConsumer("World");

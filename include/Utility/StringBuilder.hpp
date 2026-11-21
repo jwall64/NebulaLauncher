@@ -42,6 +42,8 @@ public:
 
     StringBuilder(LinearAllocator* allocator) noexcept :
         _mLastResult(Result::SUCCESS),
+        _mLength(0),
+        _mBegin(0),
         _pAllocator(allocator)
     { }
 

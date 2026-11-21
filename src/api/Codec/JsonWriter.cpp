@@ -183,7 +183,7 @@ nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::add(JsonElement elem
     return *this;
 }
 
-nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::write(std::function_ref<Result(Writer writer)> writer) {
+nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::write(nbl::FunctionRef<Result(Writer writer)> writer) {
 
     if(_rParent._mLastResult.error()) return *this;
     
@@ -196,7 +196,7 @@ nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::write(std::function_
     return *this;
 }
 
-nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::writeObject(std::function_ref<Result(ObjectWriter& writer)> writer) {
+nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::writeObject(nbl::FunctionRef<Result(ObjectWriter& writer)> writer) {
 
     if(_rParent._mLastResult.error()) return *this;
     
@@ -221,7 +221,7 @@ nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::writeObject(std::fun
 
 }
 
-nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::writeArray(std::function_ref<Result(ArrayWriter& writer)> writer) {
+nbl::JsonWriter::ArrayWriter& nbl::JsonWriter::ArrayWriter::writeArray(nbl::FunctionRef<Result(ArrayWriter& writer)> writer) {
     if(_rParent._mLastResult.error()) return *this;
     
     if(_mNumElements++ > 0) {
@@ -266,7 +266,7 @@ nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::add(StringView key
     return *this;
 }
 
-nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::write(StringView key, std::function_ref<Result(Writer writer)> writer) {
+nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::write(StringView key, nbl::FunctionRef<Result(Writer writer)> writer) {
 
     if(_rParent._mLastResult.error()) return *this;
     
@@ -289,7 +289,7 @@ nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::write(StringView k
 }
 
 
-nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeString(StringView key, std::function_ref<Result(Writer writer)> writer) {
+nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeString(StringView key, nbl::FunctionRef<Result(Writer writer)> writer) {
 
         if(_rParent._mLastResult.error()) return *this;
     
@@ -319,7 +319,7 @@ nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeString(String
 }
 
 
-nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeObject(StringView key, std::function_ref<Result(ObjectWriter& writer)> writer) {
+nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeObject(StringView key, nbl::FunctionRef<Result(ObjectWriter& writer)> writer) {
 
     if(_rParent._mLastResult.error()) return *this;
     
@@ -348,7 +348,7 @@ nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeObject(String
     _rParent._mLastResult = _rParent._mSink.writeChar('}');
     return *this;
 }
-nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeArray(StringView key, std::function_ref<Result(ArrayWriter& writer)> writer) {
+nbl::JsonWriter::ObjectWriter& nbl::JsonWriter::ObjectWriter::writeArray(StringView key, nbl::FunctionRef<Result(ArrayWriter& writer)> writer) {
     if(_rParent._mLastResult.error()) return *this;
     
     if(_mNumElements++ > 0) {
@@ -382,7 +382,7 @@ nbl::Result nbl::JsonWriter::writeElement(nbl::JsonElement element) {
     return nbl::writeJson(_mSink, element);
 }
 
-nbl::Result nbl::JsonWriter::writeObject(std::function_ref<Result(ObjectWriter& writer)> writer) {
+nbl::Result nbl::JsonWriter::writeObject(nbl::FunctionRef<Result(ObjectWriter& writer)> writer) {
 
     NBL_CHECK(_mLastResult = _mSink.writeChar('{'));
 
@@ -398,7 +398,7 @@ nbl::Result nbl::JsonWriter::writeObject(std::function_ref<Result(ObjectWriter& 
 
     return nbl::Result::SUCCESS;
 }
-nbl::Result nbl::JsonWriter::writeArray(std::function_ref<Result(ArrayWriter& writer)> writer) {
+nbl::Result nbl::JsonWriter::writeArray(nbl::FunctionRef<Result(ArrayWriter& writer)> writer) {
     NBL_CHECK(_mLastResult = _mSink.writeChar('['));
 
     auto obj = ArrayWriter(*this);

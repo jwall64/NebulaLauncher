@@ -149,7 +149,7 @@ public:
         _mGameLogoPosition(gameLogoPosition)
     {}
 
-    InstallationDetails(InstallationDetails&& other) :
+    InstallationDetails(InstallationDetails&& other) noexcept :
         QObject(other.parent()),
         _mInstallationId(other._mInstallationId),
         _mGameId(other._mGameId),
@@ -178,7 +178,7 @@ public:
         _mGameLogoPosition(std::move(other._mGameLogoPosition))
     { }
 
-    InstallationDetails& operator=(InstallationDetails&& other) {
+    InstallationDetails& operator=(InstallationDetails&& other) noexcept {
         if(this == &other) return *this;
 
         setParent(other.parent());

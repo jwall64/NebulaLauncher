@@ -35,7 +35,7 @@ nbl::Result nbl::StringBuilder::replaceChecked(char oldValue, StringView newValu
     char* stringData = static_cast<char*>(_pAllocator->begin()) + _mBegin;
     usize stringLength = _mLength;
 
-    usize occurrances;
+    usize occurrances = 0;
     for(usize i = startIndex ; i < stringLength; i++) {
         char c = stringData[i];
         if(c == oldValue) {

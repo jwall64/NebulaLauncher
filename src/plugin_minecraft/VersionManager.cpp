@@ -78,7 +78,7 @@ nbl::JsonObject nbl::mc::VersionRef::javaVersion() const {
     return root.getObject("javaVersion");
 }
 
-nbl::Result nbl::mc::VersionRef::enumerateArguments(StringView key, std::function_ref<Result(JsonElement)> argumentConsumer) const {
+nbl::Result nbl::mc::VersionRef::enumerateArguments(StringView key, nbl::FunctionRef<Result(JsonElement)> argumentConsumer) const {
 
     if(parent) {
         NBL_CHECK(parent->enumerateArguments(key, argumentConsumer));
@@ -89,7 +89,7 @@ nbl::Result nbl::mc::VersionRef::enumerateArguments(StringView key, std::functio
     return nbl::Result::SUCCESS;
 }
 
-nbl::Result nbl::mc::VersionRef::enumerateLibraries(std::function_ref<Result(JsonElement)> libraryConsumer) const {
+nbl::Result nbl::mc::VersionRef::enumerateLibraries(nbl::FunctionRef<Result(JsonElement)> libraryConsumer) const {
     if(parent) {
         NBL_CHECK(parent->enumerateLibraries(libraryConsumer));
     }

@@ -43,7 +43,7 @@ nbl::Array _fields = {
             .pfnSuggest = [](
                     nbl::PluginContext* context, 
                     nbl::StringView current, 
-                    std::function_ref<void(nbl::StringView)> suggestionConsumer, 
+                    nbl::FunctionRef<void(nbl::StringView)> suggestionConsumer, 
                     void* userData) {
 
                 nbl::mc::MinecraftLauncher* mc = static_cast<nbl::mc::MinecraftLauncher*>(userData);

@@ -41,7 +41,7 @@ public:
         return _mRootFolder;
     }
 
-    void suggestVersions(PluginContext* context, StringView current, std::function_ref<void(nbl::StringView)> suggestionConsumer);
+    void suggestVersions(PluginContext* context, StringView current, nbl::FunctionRef<void(nbl::StringView)> suggestionConsumer);
 
     static Result init(StringView rootFolder, MinecraftLauncher* launcher);
 

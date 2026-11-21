@@ -54,7 +54,7 @@ inline OnlineAccountFlags& operator|=(OnlineAccountFlags& flags, OnlineAccountFl
 
 
 struct OnlineAccount;
-typedef std::function_ref<Result(const OnlineAccount&)> OnlineAccountCallback;
+typedef nbl::FunctionRef<Result(const OnlineAccount&)> OnlineAccountCallback;
 
 struct OnlineAccount {
     i64 id;

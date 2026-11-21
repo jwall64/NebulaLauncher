@@ -95,8 +95,8 @@ struct ImageLoadResult {
 };
 
 
-typedef std::function_ref<Result(const ImageLoadResult&)> ImageLoadCallback;
-typedef std::function_ref<Result(usize, u8**)> ImageAllocationCallback;
+typedef nbl::FunctionRef<Result(const ImageLoadResult&)> ImageLoadCallback;
+typedef nbl::FunctionRef<Result(usize, u8**)> ImageAllocationCallback;
 
 
 class MediaManager {

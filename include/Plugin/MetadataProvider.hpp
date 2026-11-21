@@ -27,7 +27,7 @@
 #include <Core/String.hpp>
 #include <Core/Optional.hpp>
 
-#include <functional>
+#include <Core/FunctionRef.hpp>
 #include "Plugin/PluginContext.hpp"
 
 namespace nbl {
@@ -64,7 +64,7 @@ union MetadataValue {
     StringView logo;
 };
 
-typedef std::function_ref<Result(MetadataField, MetadataValue)> MetadataCallback;
+typedef nbl::FunctionRef<Result(MetadataField, MetadataValue)> MetadataCallback;
 
 struct MetadataProvider {
 

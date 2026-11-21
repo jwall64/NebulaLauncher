@@ -37,7 +37,7 @@
 
 #elif defined(NBL_PLATFORM_WINDOWS)
 
-#include <synchapi.h>
+#include <Platform/WindowsApi.hpp>
 #undef ERROR
 
 #endif

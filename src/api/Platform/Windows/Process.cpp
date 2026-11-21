@@ -327,7 +327,7 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
                 TRUE) == CSTR_LESS_THAN;
             return out;
         };
-        std::function_ref<i32(const usize&, const usize&)> compareFunc = cmp;
+        nbl::FunctionRef<i32(const usize&, const usize&)> compareFunc = cmp;
         
         quicksort(indices, compareFunc);
 

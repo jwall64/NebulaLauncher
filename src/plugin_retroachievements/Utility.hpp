@@ -25,11 +25,11 @@
 
 #include <Core/Result.hpp>
 #include <Core/String.hpp>
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl::ra {
 
-Result parseTitle(StringView title, std::function_ref<void(StringView)> tagConsumer, StringView* gameTitle, StringView* subsetName);
+Result parseTitle(StringView title, nbl::FunctionRef<void(StringView)> tagConsumer, StringView* gameTitle, StringView* subsetName);
 
 Result parseDate(StringView date, u64* outTime);
 

@@ -29,7 +29,7 @@
 #include <Platform/Time.hpp>
 
 
-nbl::Result nbl::ra::parseTitle(StringView title, std::function_ref<void(StringView)> tagConsumer, StringView* gameTitle, StringView* subsetName) {
+nbl::Result nbl::ra::parseTitle(StringView title, nbl::FunctionRef<void(StringView)> tagConsumer, StringView* gameTitle, StringView* subsetName) {
 
     enum State : i32 {
         S_TAGS,

@@ -378,6 +378,7 @@ public:
     BufferedReader(Reader source, void* buffer, usize bufLen) :
         _mSource(source),
         _mPos(0),
+        _mAvailable(0),
         _mBufLen(bufLen),
         _pBuffer(static_cast<u8*>(buffer))
     { }

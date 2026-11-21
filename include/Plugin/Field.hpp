@@ -29,7 +29,7 @@
 #include <Platform/Allocator.hpp>
 #include <Utility/Placeholder.hpp>
 
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
@@ -135,11 +135,11 @@ struct Field {
             f64 max;
         } floatData;
         struct {
-            void (*pfnSuggest)(PluginContext* context, StringView current, std::function_ref<void(StringView)> suggestionConsumer, void* userData);
+            void (*pfnSuggest)(PluginContext* context, StringView current, nbl::FunctionRef<void(StringView)> suggestionConsumer, void* userData);
             void* userData;
             nbl::Span<nbl::Placeholder> customPlaceholders;
 
-            void suggest(PluginContext* context, StringView current, std::function_ref<void(StringView)> suggestionConsumer) const {
+            void suggest(PluginContext* context, StringView current, nbl::FunctionRef<void(StringView)> suggestionConsumer) const {
                 if(!pfnSuggest) return;
                 pfnSuggest(context, current, suggestionConsumer, userData);
             }

@@ -45,9 +45,9 @@ struct InstallationLookupResult {
 
 struct Installation;
 
-    typedef std::function_ref<Result(const InstallationLookupResult& result)> InstallationLookupCallback;
-    typedef std::function_ref<Result(const Installation& installation, const Game& game)> InstallationExtendedCallback;
-    typedef std::function_ref<Result(const Installation& meta)> InstallationMetaCallback;
+    typedef nbl::FunctionRef<Result(const InstallationLookupResult& result)> InstallationLookupCallback;
+    typedef nbl::FunctionRef<Result(const Installation& installation, const Game& game)> InstallationExtendedCallback;
+    typedef nbl::FunctionRef<Result(const Installation& meta)> InstallationMetaCallback;
 
 
 

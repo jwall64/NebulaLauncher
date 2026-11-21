@@ -304,7 +304,7 @@ nbl::Result nbl::makeDirectories(StringView path) {
 
 bool nbl::fileExists(StringView path) {
 
-    if(path.length() == 0 || path.length() >= PATH_MAX) return nbl::Result::INVALID_ARGUMENT;
+    if(path.length() == 0 || path.length() >= PATH_MAX) return false;
 
     if(path.nullTerminated()) {
         return access(path.data(), F_OK) == 0;
@@ -334,7 +334,7 @@ nbl::Result nbl::deleteFile(StringView path) {
 }
 
 bool nbl::isExecutable(StringView path) {
-    if(path.length() == 0 || path.length() >= PATH_MAX) return nbl::Result::INVALID_ARGUMENT;
+    if(path.length() == 0 || path.length() >= PATH_MAX) return false;
 
     if(path.nullTerminated()) {
         return access(path.data(), X_OK) == 0;

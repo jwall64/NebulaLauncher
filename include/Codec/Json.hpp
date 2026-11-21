@@ -29,7 +29,7 @@
 #include <Core/Assert.hpp>
 #include <Platform/Allocator.hpp>
 
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
@@ -147,7 +147,8 @@ class JsonElement {
 public:
 
     JsonElement() :
-        _mType(JsonType::NONE)
+        _mType(JsonType::NONE),
+        object{}
     {} 
 
     JsonElement(const JsonElement& other) noexcept = default;
@@ -319,9 +320,9 @@ public:
     class ArrayWriter {
     public:
         ArrayWriter& add(JsonElement element);
-        ArrayWriter& write(std::function_ref<Result(Writer writer)> writer);
-        ArrayWriter& writeObject(std::function_ref<Result(ObjectWriter& writer)> writer);
-        ArrayWriter& writeArray(std::function_ref<Result(ArrayWriter& writer)> writer);
+        ArrayWriter& write(nbl::FunctionRef<Result(Writer writer)> writer);
+        ArrayWriter& writeObject(nbl::FunctionRef<Result(ObjectWriter& writer)> writer);
+        ArrayWriter& writeArray(nbl::FunctionRef<Result(ArrayWriter& writer)> writer);
     private:
 
         ArrayWriter(JsonWriter& parent) :
@@ -336,10 +337,10 @@ public:
     class ObjectWriter {
     public:
         ObjectWriter& add(StringView key, JsonElement element);
-        ObjectWriter& write(StringView key, std::function_ref<Result(Writer writer)> writer);
-        ObjectWriter& writeString(StringView key, std::function_ref<Result(Writer writer)> writer);
-        ObjectWriter& writeObject(StringView key, std::function_ref<Result(ObjectWriter& writer)> writer);
-        ObjectWriter& writeArray(StringView key, std::function_ref<Result(ArrayWriter& writer)> writer);
+        ObjectWriter& write(StringView key, nbl::FunctionRef<Result(Writer writer)> writer);
+        ObjectWriter& writeString(StringView key, nbl::FunctionRef<Result(Writer writer)> writer);
+        ObjectWriter& writeObject(StringView key, nbl::FunctionRef<Result(ObjectWriter& writer)> writer);
+        ObjectWriter& writeArray(StringView key, nbl::FunctionRef<Result(ArrayWriter& writer)> writer);
 
     private:
 
@@ -354,8 +355,8 @@ public:
 
 
     Result writeElement(JsonElement element);
-    Result writeObject(std::function_ref<Result(ObjectWriter& writer)> writer);
-    Result writeArray(std::function_ref<Result(ArrayWriter& writer)> writer);
+    Result writeObject(nbl::FunctionRef<Result(ObjectWriter& writer)> writer);
+    Result writeArray(nbl::FunctionRef<Result(ArrayWriter& writer)> writer);
 
 private:
 
@@ -373,8 +374,8 @@ public:
     Builder(const Builder& other) = delete;
 
     Result add(StringView key, JsonElement element);
-    Result addObject(StringView key, std::function_ref<Result(JsonObject::Builder&)> callback, usize buckets = 0);
-    Result addArray(StringView key, std::function_ref<Result(JsonArray::Builder&)> callback);
+    Result addObject(StringView key, nbl::FunctionRef<Result(JsonObject::Builder&)> callback, usize buckets = 0);
+    Result addArray(StringView key, nbl::FunctionRef<Result(JsonArray::Builder&)> callback);
 
     Result build(JsonObject* out, usize bucketCount = 0);
 
@@ -416,8 +417,8 @@ public:
     Builder(const Builder& other) = delete;
 
     Result add(JsonElement element);
-    Result addObject(std::function_ref<Result(JsonObject::Builder&)> callback);
-    Result addArray(std::function_ref<Result(JsonArray::Builder&)> callback);
+    Result addObject(nbl::FunctionRef<Result(JsonObject::Builder&)> callback);
+    Result addArray(nbl::FunctionRef<Result(JsonArray::Builder&)> callback);
 
     Result build(JsonArray* out);
 

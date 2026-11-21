@@ -26,7 +26,7 @@ struct PluginFields {
     StringView version;
 };
 
-typedef std::function_ref<Result(const PluginFields&)> PluginFieldsCallback;
+typedef nbl::FunctionRef<Result(const PluginFields&)> PluginFieldsCallback;
 
 Result getPluginFields(DatabaseConnection* connection, StringView pluginId, PluginFieldsCallback callback);
 

@@ -3,12 +3,12 @@
 #include <Core/Span.hpp>
 
 #include <utility>
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
 template<typename T>
-void quicksort(Span<T> values, std::function_ref<i32(const T&, const T&)> compareFunc = [](const T& t1, const T& t2) { return t1 < t2; }) {
+void quicksort(Span<T> values, nbl::FunctionRef<i32(const T&, const T&)> compareFunc = [](const T& t1, const T& t2) { return t1 < t2; }) {
 
     if(values.length() <= 1) return;
 

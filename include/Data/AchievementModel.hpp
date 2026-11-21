@@ -28,7 +28,7 @@
 #include <Data/Database.hpp>
 #include <Data/Common.hpp>
 
-#include <functional>
+#include <Core/FunctionRef.hpp>
 
 namespace nbl {
 
@@ -73,7 +73,7 @@ inline AchievementFlags& operator&=(AchievementFlags& flags, AchievementFlag oth
 
 
 struct Achievement;
-typedef std::function_ref<Result(const Achievement&)> AchievementCallback;
+typedef nbl::FunctionRef<Result(const Achievement&)> AchievementCallback;
 
 struct Achievement {
     i64 id;
@@ -123,7 +123,7 @@ struct Achievement {
 
 
 struct AchievementSet;
-typedef std::function_ref<Result(const AchievementSet&)> AchievementSetCallback;
+typedef nbl::FunctionRef<Result(const AchievementSet&)> AchievementSetCallback;
 
 struct AchievementSet {
     i64 id;
@@ -159,7 +159,7 @@ struct AchievementSet {
 
 
 struct AchievementState;
-typedef std::function_ref<Result(const AchievementState&)> AchievementStateCallback;
+typedef nbl::FunctionRef<Result(const AchievementState&)> AchievementStateCallback;
 
 struct AchievementState {
     i64 gameId;

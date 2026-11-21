@@ -236,7 +236,7 @@ nbl::Result nbl::mc::MinecraftLauncher::init(StringView rootFolder, MinecraftLau
 }
 
 
-void nbl::mc::MinecraftLauncher::suggestVersions(PluginContext* context, StringView current, std::function_ref<void(nbl::StringView)> suggestionConsumer) {
+void nbl::mc::MinecraftLauncher::suggestVersions(PluginContext* context, StringView current, nbl::FunctionRef<void(nbl::StringView)> suggestionConsumer) {
 
     Array<StringView, 2> hardcodedAliases = {
         "@latest",

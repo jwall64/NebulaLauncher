@@ -38,11 +38,13 @@ public:
 
 
     Optional() :
+        _mValue{},
         _mHasValue(false)
     { }
 
 
     Optional(const T& value) :
+        _mValue{},
         _mHasValue(true)
     {
         new (_mValue) T(value);
@@ -50,6 +52,7 @@ public:
     
 
     Optional(T&& value) :
+        _mValue{},
         _mHasValue(true)
     {
         new (_mValue) T(std::move(value));
@@ -57,6 +60,7 @@ public:
 
 
     Optional(const Optional& other) :
+        _mValue{},
         _mHasValue(other._mHasValue)
     {
         if(_mHasValue) {
@@ -65,6 +69,7 @@ public:
     }
 
     Optional(Optional&& other) :
+        _mValue{},
         _mHasValue(other._mHasValue)
     {
         if(_mHasValue) {
