@@ -84,8 +84,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #
 
 if(MSVC)
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG};/Subsystem:Console;/Entry:mainCRTStartup")
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE};/Subsystem:Windows;/Entry:mainCRTStartup")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /Subsystem:Console /Entry:mainCRTStartup")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /Subsystem:Windows /Entry:mainCRTStartup")
 endif()
 
 set(NBL_SRC_DIR ${NBL_ROOT_DIR}/src)
