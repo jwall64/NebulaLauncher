@@ -36,7 +36,7 @@
 
 #include "WindowsUtil.hpp"
 
-
+#include <Platform/Logging.hpp>
 
 nbl::StringView nbl::getHostName() {
 
@@ -46,20 +46,20 @@ nbl::StringView nbl::getHostName() {
 
     if(_length == 0) {
 
-        DWORD size;
+        DWORD size = 0;
         GetComputerNameExW(ComputerNamePhysicalDnsHostname, nullptr, &size);
-        NBL_ASSERT(GetLastError() != ERROR_MORE_DATA);
+        NBL_ASSERT(GetLastError() == ERROR_MORE_DATA);
 
         nbl::AllocationFrame frame(nbl::Arena::threadLocal());
-        wchar_t* data;
-        NBL_ASSERT(frame.allocate(&data, size));
+        wchar_t* data = nullptr;
+        NBL_ASSERT(frame.allocate(&data, size).success());
         NBL_ASSERT(GetComputerNameExW(ComputerNamePhysicalDnsHostname, data, &size));
 
         int utfSize = WideCharToMultiByte(CP_UTF8, 0, data, size, nullptr, 0, nullptr, nullptr);
         NBL_ASSERT(utfSize > 0);
 
-        char* utfData;
-        NBL_ASSERT(frame.allocate(&utfData, utfSize));
+        char* utfData = nullptr;
+        NBL_ASSERT(frame.allocate(&utfData, utfSize).success());
         NBL_ASSERT(WideCharToMultiByte(CP_UTF8, 0, data, size, utfData, utfSize, nullptr, nullptr));
 
         _length = min(255, utfSize);
@@ -152,7 +152,7 @@ nbl::StringView nbl::getBinaryPath() {
         NBL_ASSERT(utfSize > 0);
 
         char* utfData;
-        NBL_ASSERT(frame.allocate(&utfData, utfSize));
+        NBL_ASSERT(frame.allocate(&utfData, utfSize).success());
         NBL_ASSERT(WideCharToMultiByte(CP_UTF8, 0, path, _length, utfData, utfSize, nullptr, nullptr));
 
         _path = new char[utfSize + 1];

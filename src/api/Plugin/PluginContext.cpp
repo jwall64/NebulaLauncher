@@ -32,6 +32,7 @@
 #include <Core/Math.hpp>
 #include <Platform/Process.hpp>
 #include <Platform/Arena.hpp>
+#include <Platform/File.hpp>
 #include <Utility/StringBuilder.hpp>
 #include <Data/Database.hpp>
 #include <Data/Model.hpp>
@@ -55,7 +56,7 @@ nbl::Result nbl::PluginContext::create(StringView deviceName, StringView databas
 
         StringView binaryPath = getBinaryPath();
         usize index;
-        NBL_CHECK(binaryPath.findLast('/', &index));
+        NBL_CHECK(binaryPath.findLast(NBL_PATH_SEPARATOR, &index));
         StringView binaryFolder = binaryPath.slice(0, index + 1);
         NBL_CHECK(nbl::StringBuilder(&frame)
                 .append(binaryFolder)
