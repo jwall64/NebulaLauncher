@@ -147,7 +147,10 @@ public:
     /**
     * \brief Default constructor that creates an empty, invalid prepared statement
     */
-    PreparedStatement() = default;
+    PreparedStatement() :
+        _pConnectionHandle(nullptr),
+        _pHandle(nullptr)
+    { }
 
     /**
      * \brief Destructor. Frees the underlying data allocated with the statement 
@@ -282,7 +285,11 @@ public:
     /**
      * \brief Contstructor that creates a unconnected "connection"
      */
-    DatabaseConnection() = default;
+    DatabaseConnection() :
+        _mArena{},
+        _pHandle(nullptr),
+        _mTransactionDepth(0)
+    { };
 
     /**
      * \brief Destructor that frees all data related to the database connection, if any

@@ -19,7 +19,8 @@ set(QT_QML_GENERATE_QMLLS_INI ON)
 
 project(Nebula_App LANGUAGES CXX)
 
-find_package(Qt6 6.11.1 COMPONENTS Quick ShaderTools REQUIRED)
+find_package(Qt6 6.11.1 COMPONENTS Quick ShaderTools Qml REQUIRED)
+
 qt_standard_project_setup(REQUIRES 6.11.1)
 
 file(GLOB_RECURSE NBL_APP_FONTS RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/fonts/*.ttf")
@@ -66,3 +67,17 @@ target_include_directories(Nebula_App PRIVATE
 target_link_libraries(Nebula_App PRIVATE Nebula_Api)
 target_link_libraries(Nebula_App PRIVATE Qt6::Quick Qt6::ShaderTools)
 target_link_libraries(Nebula_App PRIVATE CURL::libcurl)
+
+
+install(TARGETS Nebula_App
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+qt_generate_deploy_qml_app_script(
+    TARGET Nebula_App
+    OUTPUT_SCRIPT NBL_DEPLOY_SCRIPT
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${NBL_DEPLOY_SCRIPT})

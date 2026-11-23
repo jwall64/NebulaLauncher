@@ -181,7 +181,7 @@ nbl::Result _updateAchievementState(nbl::PluginContext* context, const nbl::Game
 
         NBL_CHECK(nbl::DatabaseConnection::open(_db_path, &conn));
 
-        nbl::PreparedStatement mapGameStmt;
+        nbl::PreparedStatement mapGameStmt{};
         NBL_CHECK(conn.prepare("SELECT game.id FROM game JOIN game_mapping ON game_mapping.game_id = game.id WHERE game_mapping.igdb_id = ?1;", &mapGameStmt));
 
         mapGameStmt.bindStringOrNull(1, externalId);
@@ -228,7 +228,7 @@ nbl::Result _updateAchievementState(nbl::PluginContext* context, const nbl::Game
             NBL_CHECK(nbl::DatabaseConnection::open(_db_path, &conn));
         }
 
-        nbl::PreparedStatement getSubsetsStmt;
+        nbl::PreparedStatement getSubsetsStmt{};
         NBL_CHECK(conn.prepare("SELECT subset.id, subset.name FROM subset_parent JOIN subset ON subset_parent.subset_id = subset.id WHERE subset_parent.game_id = ?1 LIMIT 15;", &getSubsetsStmt));
         NBL_CHECK(getSubsetsStmt.bindInt(1, gameId));
 

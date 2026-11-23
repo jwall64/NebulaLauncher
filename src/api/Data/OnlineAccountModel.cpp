@@ -44,7 +44,7 @@ nbl::Result _processAccount(nbl::OnlineAccountCallback callback, i32 columns, nb
 
 nbl::Result nbl::OnlineAccount::create(DatabaseConnection *connection, const OnlineAccount &account, i64 *outAccountId) { 
 
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 INSERT INTO online_account
@@ -59,7 +59,7 @@ VALUES
 }
 
 nbl::Result nbl::OnlineAccount::update(DatabaseConnection *connection, const OnlineAccount &account) { 
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 UPDATE online_account SET 
@@ -74,7 +74,7 @@ WHERE oaId = ?1;)", &_stmt));
 
 
 nbl::Result nbl::OnlineAccount::updateStatus(DatabaseConnection* connection, i64 accountId, OnlineAccountStatus status) {
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare("UPDATE online_account SET status = ?2 WHERE oaId = ?1;", &_stmt));
     }
@@ -86,7 +86,7 @@ nbl::Result nbl::OnlineAccount::updateStatus(DatabaseConnection* connection, i64
 
 nbl::Result nbl::OnlineAccount::remove(DatabaseConnection* connection, i64 accountId) {
 
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 DELETE FROM online_account
@@ -98,7 +98,7 @@ WHERE oaId = ?1;)", &_stmt));
 }
 
 nbl::Result nbl::OnlineAccount::get(DatabaseConnection* connection, i64 accountId, OnlineAccountCallback callback) {
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 SELECT oaId, fields, provider, updatedAt, username, icon, flags, status
@@ -114,7 +114,7 @@ WHERE oaId = ?1;)", &_stmt));
 
 
 nbl::Result nbl::OnlineAccount::getFirst(DatabaseConnection* connection, StringView provider, OnlineAccountCallback callback) {
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 SELECT oaId, fields, provider, updatedAt, username, icon, flags, status
@@ -136,7 +136,7 @@ LIMIT 1;)", &_stmt));
 }
 
 nbl::Result nbl::OnlineAccount::enumerate(DatabaseConnection* connection, OnlineAccountCallback callback) {
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 SELECT oaId, fields, provider, updatedAt, username, icon, flags, status
@@ -149,7 +149,7 @@ FROM online_account;)", &_stmt));
 }
 
 nbl::Result nbl::OnlineAccount::enumerateForProvider(DatabaseConnection* connection, StringView provider, OnlineAccountCallback callback) {
-    PreparedStatement _stmt;
+    static PreparedStatement _stmt{};
     if(!_stmt.isValid(connection)) {
         NBL_CHECK(connection->prepare(R"(
 SELECT oaId, fields, provider, updatedAt, username, icon, flags, status

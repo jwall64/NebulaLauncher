@@ -166,9 +166,10 @@ nbl::DatabaseConnection::~DatabaseConnection() {
 
 
 nbl::Result nbl::DatabaseConnection::prepare(nbl::StringView query, PreparedStatement* outStatement) {
-
-    outStatement->~PreparedStatement();
-
+    
+    if(outStatement->_pHandle) {
+        sqlite3_finalize(reinterpret_cast<sqlite3_stmt*>(outStatement->_pHandle));
+    }
     NBL_ASSERT(query.length() <= static_cast<usize>(INT_MAX));
     outStatement->_pConnectionHandle = _pHandle;
 

@@ -93,7 +93,7 @@ nbl::Result nbl::initDatabase(DatabaseConnection* connection) {
 
     i32 userVersion = 0;
 
-    nbl::PreparedStatement stmt = {};
+    nbl::PreparedStatement stmt{};
     NBL_CHECK(connection->prepare("PRAGMA user_version;", &stmt));
 
     NBL_CHECK(connection->execute(&stmt, [&](i32 argc, DataValue* argv, const char** columnNames, i64 lastInsertRowId) -> nbl::Result {
