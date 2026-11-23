@@ -66,7 +66,8 @@ nbl::Result nbl::utcFromComponents(u32 year, u8 month, u8 day, u8 hour,
     uli.HighPart = ft.dwHighDateTime;
 
     constexpr static u64 _diff = 116444736000000000ULL;
-    return (uli.QuadPart - _diff) / 10000ULL;
+    *out = (uli.QuadPart - _diff) / 10000ULL;
+    return nbl::Result::SUCCESS;
 }
 
 #endif

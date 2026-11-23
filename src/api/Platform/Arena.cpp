@@ -21,6 +21,7 @@
  * \brief Implementation of Platform/Arena.hpp
  */
 
+#include <Core/Math.hpp>
 #include <Platform/Arena.hpp>
 #include <Platform/Allocator.hpp>
 #include <Platform/Logging.hpp>
@@ -39,17 +40,23 @@ nbl::Result nbl::Arena::push(usize amount, void** outPtr) noexcept {
     
     if(amount == 0) return nbl::Result::INVALID_ARGUMENT;
 
+    usize available = _mCapacity - _mIndex;
+    if(amount > available) {
+        NBL_ERROR("Out of memory! ", amount, " > ", available);
+        return nbl::Result::OUT_OF_MEMORY;
+    }
+
     void* out = end();
     usize remaining = _mCommitted - _mIndex;
     if(remaining < amount) {
-        if(_mCommitted >= _mCapacity) {
-            NBL_ERROR("Out of memory! ", amount, " > ", remaining);
+        usize needed = amount - remaining;
+        usize uncommitted = _mCapacity - _mCommitted;
+        usize committed = nbl::min(uncommitted, nbl::alignUp(needed, nbl::pageSize()));
+        if(committed < needed) {
             return nbl::Result::OUT_OF_MEMORY;
         }
 
         u8* allocatedEnd = static_cast<u8*>(_pHead) + _mCommitted;
-        usize needed = amount - remaining;
-        usize committed = needed;
         NBL_CHECK(nbl::commitMemory(allocatedEnd, &committed));
         _mCommitted += committed;
     }

@@ -191,9 +191,13 @@ nbl::Result nbl::DatabaseConnection::prepare(nbl::StringView query, PreparedStat
 
 nbl::Result nbl::DatabaseConnection::execute(nbl::StringView query) {
 
+    AllocationFrame frame(&_mArena);
+    if(!query.nullTerminated()) {
+        NBL_CHECK(StringBuilder::nullTerminate(query, &query, &frame));
+    }
     int rc = sqlite3_exec(
         reinterpret_cast<sqlite3*>(_pHandle), 
-        query.data(), 
+        query.data(),
         nullptr,
         nullptr,
         nullptr);
@@ -206,6 +210,11 @@ nbl::Result nbl::DatabaseConnection::execute(nbl::StringView query) {
 }
 
 nbl::Result nbl::DatabaseConnection::execute(nbl::StringView query, DatabaseCallback callback) {
+
+    AllocationFrame frame(&_mArena);
+    if(!query.nullTerminated()) {
+        NBL_CHECK(StringBuilder::nullTerminate(query, &query, &frame));
+    }
 
     int rc = sqlite3_exec(
         reinterpret_cast<sqlite3*>(_pHandle), 
@@ -360,13 +369,17 @@ nbl::Result nbl::DatabaseConnection::execute(PreparedStatement* query, TypedData
 
 nbl::Result nbl::DatabaseConnection::beginTransaction() {
 
-    if(_mTransactionDepth++ > 0) {
+    if(_mTransactionDepth > 0) {
+
+        const u32 savepoint = _mTransactionDepth + 1;
 
         AllocationFrame frame(Arena::threadLocal());
         StringView sql{};
-        NBL_CHECK(StringBuilder(&frame).append("SAVEPOINT sp").append(_mTransactionDepth).append(";").build(&sql));
+        NBL_CHECK(StringBuilder(&frame).append("SAVEPOINT sp").append(savepoint).append(";").buildNullTerminated(&sql));
+        NBL_CHECK(execute(sql));
 
-        return execute(sql);
+        _mTransactionDepth = savepoint;
+        return nbl::Result::SUCCESS;
     }
 
     static nbl::PreparedStatement stmt;
@@ -374,34 +387,58 @@ nbl::Result nbl::DatabaseConnection::beginTransaction() {
         NBL_CHECK(prepare("BEGIN TRANSACTION;", &stmt));
     }
     NBL_CHECK(execute(&stmt));
+    _mTransactionDepth = 1;
     return nbl::Result::SUCCESS;
 }
 nbl::Result nbl::DatabaseConnection::commitTransaction() {
 
+    if(_mTransactionDepth == 0) return nbl::Result::INVALID_STATE;
     if(--_mTransactionDepth > 0) return nbl::Result::SUCCESS;
 
     static nbl::PreparedStatement stmt;
     if(!stmt.isValid(this)) {
         NBL_CHECK(prepare("COMMIT;", &stmt));
     }
-    NBL_CHECK(execute(&stmt));
+
+    Result res = execute(&stmt);
+    if(res.error()) {
+        _mTransactionDepth = 1;
+        return res;
+    }
     return nbl::Result::SUCCESS;
 }
 
 nbl::Result nbl::DatabaseConnection::rollbackTransaction() {
 
-    if(--_mTransactionDepth > 0) {
+    if(_mTransactionDepth == 0) return nbl::Result::INVALID_STATE;
+
+    const u32 previousDepth = _mTransactionDepth;
+    --_mTransactionDepth;
+
+    if(_mTransactionDepth > 0) {
         AllocationFrame frame(Arena::threadLocal());
         StringView sql{};
-        NBL_CHECK(StringBuilder(&frame).append("ROLLBACK TO SAVEPOINT sp").append(_mTransactionDepth + 1).append(";").build(&sql));
-        return execute(sql);
+        NBL_CHECK(StringBuilder(&frame).append("ROLLBACK TO SAVEPOINT sp").append(_mTransactionDepth + 1).append(";").buildNullTerminated(&sql));
+
+        Result res = execute(sql);
+        if(res.error()) {
+            _mTransactionDepth = previousDepth;
+            return res;
+        }
+        return nbl::Result::SUCCESS;
     }
 
     static nbl::PreparedStatement stmt;
     if(!stmt.isValid(this)) {
         NBL_CHECK(prepare("ROLLBACK;", &stmt));
     }
-    return execute(&stmt);
+
+    Result res = execute(&stmt);
+    if(res.error()) {
+        _mTransactionDepth = previousDepth;
+        return res;
+    }
+    return nbl::Result::SUCCESS;
 }
 
 nbl::Result nbl::DatabaseConnection::doTransaction(nbl::Span<PreparedStatement*> statements, i64* lastInsertRowId) {

@@ -212,6 +212,9 @@ nbl::Result nbl::JsonObject::Builder::addArray(StringView key, nbl::FunctionRef<
 }
 nbl::Result nbl::JsonObject::Builder::build(nbl::JsonObject* out, usize bucketCount) {
 
+    if(out == nullptr) return nbl::Result::INVALID_ARGUMENT;
+    *out = JsonObject{};
+
     if(_mEntryCount == 0) return nbl::Result::SUCCESS;
     if(bucketCount == 0) {
         bucketCount = _mEntryCount * 1.5f;
@@ -307,6 +310,9 @@ nbl::Result nbl::JsonArray::Builder::addArray(nbl::FunctionRef<Result(JsonArray:
     return nbl::Result::SUCCESS;
 }
 nbl::Result nbl::JsonArray::Builder::build(nbl::JsonArray* out) {
+
+    if(out == nullptr) return nbl::Result::INVALID_ARGUMENT;
+    *out = JsonArray{};
 
     if(_mElementCount == 0) return nbl::Result::SUCCESS;
 

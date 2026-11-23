@@ -29,6 +29,17 @@
 
 #include <utility>
 
+#include <Platform/PlatformDefines.hpp>
+#if defined(NBL_PLATFORM_WINDOWS)
+
+#pragma push_macro("stdout")
+#pragma push_macro("stderr")
+
+#undef stdout
+#undef stderr
+
+#endif
+
 /**
  * \brief The default log level for the logging system. If NBL_LOG_LEVEL is not defined before including this header, it will be set to 2 (INFO) in release builds and 1 (DEBUG) in debug builds. This allows for filtering of log messages based on their severity, with higher log levels including messages from lower levels.
  */
@@ -40,13 +51,6 @@
 #endif
 #endif
 
-
-
-#pragma push_macro("stdout")
-#pragma push_macro("stderr")
-
-#undef stdout
-#undef stderr
 
 
 namespace nbl {
@@ -61,6 +65,16 @@ enum class LogLevel : usize {
     WARN  = 3,
     ERROR = 4,
     FATAL = 5
+};
+
+thread_local static u8 _LOG_BUFFER[4096]{};
+constexpr static const char* _LOG_PREFIXES[6]{
+    "\x1B[2m[TRACE] ",
+    "\x1B[34m[DEBUG] ",
+    "[INFO] ",
+    "\x1B[33m[WARN] ",
+    "\x1B[31m[ERROR] ",
+    "\x1B[38;5;160m[FATAL] "
 };
 
 /**
@@ -120,25 +134,14 @@ Writer stderrWriter();
 template<typename... Args>
 inline void log(nbl::LogLevel level, Args&&... args) {
 
-    thread_local static u8 _logBuffer[4096];
-
-    constexpr static const char* _prefixes[6] = {
-        "\x1B[2m[TRACE] ",
-        "\x1B[34m[DEBUG] ",
-        "[INFO] ",
-        "\x1B[33m[WARN] ",
-        "\x1B[31m[ERROR] ",
-        "\x1B[38;5;160m[FATAL] "
-    };
-
     if(level < NBL_LOG_LEVEL || level > LogLevel::FATAL) {
         return;
     }
 
-    BufferedWriter bufferedWriter(stdoutWriter(), _logBuffer, 4096);
+    BufferedWriter bufferedWriter(stdoutWriter(), _LOG_BUFFER, 4096);
     Writer out = bufferedWriter;
 
-    out.writeString(_prefixes[static_cast<usize>(level)]);
+    out.writeString(_LOG_PREFIXES[static_cast<usize>(level)]);
     (void(write(std::forward<Args>(args), out)), ...);
     out.writeString("\n\x1B[0m");
 
@@ -155,6 +158,9 @@ inline void log(nbl::LogLevel level, Args&&... args) {
 
 }
 
+#if defined(NBL_PLATFORM_WINDOWS)
 
 #pragma pop_macro("stderr")
 #pragma pop_macro("stdout")
+
+#endif

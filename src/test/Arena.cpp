@@ -39,3 +39,14 @@ TEST(Arena, PushAndGet)
     void* ptr = arena.begin();
     EXPECT_EQ(*static_cast<int*>(ptr), 42);
 }
+
+TEST(Arena, PushBeyondCapacityFails)
+{
+    nbl::Arena arena;
+    ASSERT_TRUE(nbl::Arena::create(1024, &arena).success());
+
+    void* ptr = nullptr;
+    EXPECT_EQ(arena.push(arena.capacity() + 1, &ptr), nbl::Result::OUT_OF_MEMORY);
+    EXPECT_EQ(ptr, nullptr);
+    EXPECT_EQ(arena.index(), static_cast<usize>(0));
+}

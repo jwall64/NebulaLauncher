@@ -43,7 +43,11 @@ usize nbl::pageSize() noexcept {
 nbl::Result nbl::mapMemory(usize* size, void** outPtr) noexcept {
     if(outPtr == nullptr || size == nullptr || *size == 0) return nbl::Result::INVALID_ARGUMENT;
 
-    *size = nbl::alignUp(*size, pageSize());
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    usize granularity = nbl::max<usize>(info.dwPageSize, info.dwAllocationGranularity);
+    *size = nbl::alignUp(*size, granularity);
+
     void* out = VirtualAlloc(nullptr, *size, MEM_RESERVE, PAGE_NOACCESS);
     if(out == nullptr) return nbl::Result::OUT_OF_MEMORY;
 
@@ -55,7 +59,7 @@ nbl::Result nbl::unmapMemory(void* ptr, usize* size) noexcept {
     if(ptr == nullptr || size == nullptr || *size == 0) return nbl::Result::INVALID_ARGUMENT;
 
     *size = nbl::alignUp(*size, pageSize());
-    if(!VirtualFree(ptr, *size, MEM_RELEASE)) {
+    if(!VirtualFree(ptr, 0, MEM_RELEASE)) {
         return nbl::Result::INVALID_ARGUMENT;
     }
     return nbl::Result::SUCCESS;
@@ -70,7 +74,7 @@ nbl::Result nbl::commitMemory(void* ptr, usize* size) noexcept {
     void* newPtr = VirtualAlloc(ptr, *size, MEM_COMMIT, PAGE_READWRITE);
 
     if(newPtr == nullptr) {
-        nbl::log(nbl::LogLevel::DEBUG, "Failed to commit memory! ", errno);
+        nbl::log(nbl::LogLevel::DEBUG, "Failed to commit memory! ", static_cast<u32>(GetLastError()));
         return nbl::Result::INVALID_ARGUMENT;
     }
     NBL_ASSERT(newPtr == ptr);
