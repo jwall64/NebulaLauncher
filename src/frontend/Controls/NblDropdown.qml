@@ -68,7 +68,7 @@ Item {
             horizontalAlignment: Qt.AlignHCenter
 
             text: root.effectivelyCollapsed ? "" : ""
-            font.family: Theme.font
+            font.family: Theme.nerdFont
             font.pixelSize: 20
             color: Theme.colors.textDim
 

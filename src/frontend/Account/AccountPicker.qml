@@ -184,8 +184,8 @@ Item {
                 Label {
                     Layout.fillHeight: true
                     Layout.preferredWidth: height
+                    font.family: Theme.nerdFont
                     font.pixelSize: 16
-                    font.variableAxes: { "wght": 600 }
                     text: ""
                     color: Theme.colors.text
                     verticalAlignment: Qt.AlignVCenter

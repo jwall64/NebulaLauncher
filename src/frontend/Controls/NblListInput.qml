@@ -171,9 +171,8 @@ Item {
                                             Label {
                                                 anchors.centerIn: upBg
                                                 text: ""
-                                                font.family: Theme.font
+                                                font.family: Theme.nerdFont
                                                 font.pixelSize: 20
-                                                font.variableAxes: { "wght": 600 }
                                                 color: itemControls.index == 0 ? Theme.colors.textDim : Theme.colors.text
                                             }
 
@@ -205,9 +204,8 @@ Item {
                                             Label {
                                                 anchors.centerIn: downBg
                                                 text: ""
-                                                font.family: Theme.font
+                                                font.family: Theme.nerdFont
                                                 font.pixelSize: 20
-                                                font.variableAxes: { "wght": 600 }
                                                 color: (itemControls.index + 1) == root.count ? Theme.colors.textDim : Theme.colors.text
                                             }
 
@@ -244,9 +242,8 @@ Item {
                                     Label {
                                         anchors.centerIn: removeBg
                                         text: ""
-                                        font.family: Theme.font
+                                        font.family: Theme.nerdFont
                                         font.pixelSize: 24
-                                        font.variableAxes: { "wght": 600 }
                                         color: parent.enabled ? Theme.colors.text : Theme.colors.textDim
                                     }
 

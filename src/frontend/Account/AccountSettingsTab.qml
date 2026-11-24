@@ -110,6 +110,7 @@ SettingsTab {
                                     Layout.fillHeight: true
                                     Layout.fillWidth: true
                                     Layout.preferredWidth: 16
+                                    font.family: Theme.nerdFont
                                     font.pixelSize: 16
                                     text: ""
                                     color: "#d9a107"
@@ -262,7 +263,8 @@ SettingsTab {
                             width: Math.min(240, parent.width)
                             height: 48
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: " Add Account"
+                            icon: ""
+                            text: "Add Account"
                             enabled: providerRepeater.loggingInIndex == -1
                             inactiveColor: Theme.colors.layer1
                             textColor: enabled ? Theme.colors.text : Theme.colors.textDim

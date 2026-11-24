@@ -55,8 +55,8 @@ nbl::Result nbl::frontend::TagSearchModel::_fetchPageData(qsizetype limit, qsize
     
     nbl::StringView query = nbl::StringView(_mSearchQuery.data(), _mSearchQuery.length());
 
-    QList<TagMeta> found;
-    bool exactMatch;
+    QList<TagMeta> found{};
+    bool exactMatch = false;
     found.reserve(limit);
 
     if(query.empty()) {

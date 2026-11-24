@@ -221,6 +221,7 @@ Item {
                             anchors.fill: parent
                             verticalAlignment: Qt.AlignVCenter
                             horizontalAlignment: Qt.AlignHCenter
+                            font.family: Theme.nerdFont
                             color: Theme.colors.text
                             text: ""
                         }
