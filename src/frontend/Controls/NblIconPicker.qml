@@ -76,7 +76,6 @@ Item {
                 text: "Icon"
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 color: mouseArea.containsMouse ? Theme.colors.text : Theme.colors.textDim
             }
         }

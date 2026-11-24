@@ -50,7 +50,7 @@ Item {
 
             font.family: Theme.font
             font.pixelSize: 16
-            font.weight: 600
+            font.variableAxes: { "wght": 600 }
 
             color: root.color
             elide: Text.ElideRight

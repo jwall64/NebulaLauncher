@@ -127,7 +127,6 @@ Item {
             text: root.label
             font.pixelSize: 16
             font.family: Theme.font
-            font.weight: 500
             color: mouseArea.containsMouse ? Theme.colors.text : Theme.colors.textDim
         }
     }

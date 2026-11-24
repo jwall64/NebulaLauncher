@@ -55,7 +55,7 @@ ComboBox {
         text: root.displayText
         font.pixelSize: 16
         font.family: Theme.font
-        font.weight: (root.currentIndex == 0 && root.highlightFirst) ? 600 : 400
+        font.variableAxes: { "wght": (root.currentIndex == 0 && root.highlightFirst) ? 600 : 400 }
         color: Theme.colors.text
         topPadding: 18
         leftPadding: 16
@@ -99,7 +99,7 @@ ComboBox {
             color: Theme.colors.text
             font.family: Theme.font
             font.pixelSize: 16
-            font.weight: (delegate.index == 0 && root.highlightFirst) ? 600 : 400
+            font.variableAxes: { "wght": (delegate.index == 0 && root.highlightFirst) ? 600 : 400 }
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
@@ -140,7 +140,6 @@ ComboBox {
             text: root.label
             font.pixelSize: 16
             font.family: Theme.font
-            font.weight: 500
             color: root.popup.visible ? Theme.colors.accent : Theme.colors.textDim
         }
     }

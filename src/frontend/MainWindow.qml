@@ -27,11 +27,14 @@ ApplicationWindow {
     title: "Nebula"
     color: "black"
 
+    width: 1280
+    height: 720
+
     id: root
 
     font.family: Theme.font
     font.pixelSize: 16
-    font.weight: 500
+    font.variableAxes: { "wght": 500 }
 
     property alias currentPage: pageLoader.currentItem
 

@@ -128,7 +128,7 @@ Item {
         visible: root.hidden
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
-        font.weight: 700
+        font.variableAxes: { "wght": 700 }
         font.pixelSize: 32
         text: "?"
         color: Theme.colors.textDim

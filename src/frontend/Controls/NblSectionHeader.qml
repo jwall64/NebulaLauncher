@@ -44,7 +44,6 @@ Item {
         anchors.centerIn: labelBg
         font.family: Theme.font
         font.pixelSize: 16
-        font.weight: 500
         text: root.label
         color: Theme.colors.textDim
     }

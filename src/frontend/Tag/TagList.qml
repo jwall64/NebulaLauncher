@@ -151,7 +151,6 @@ Item {
                 anchors.centerIn: labelBg
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 text: root.label
                 color: Theme.colors.textDim
             }
@@ -391,7 +390,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "+ New Tag"
                                 font.pixelSize: 16
-                                font.weight: 600
+                                font.variableAxes: { "wght": 600 }
                                 font.family: Theme.font
                                 color: Theme.colors.text
                             }

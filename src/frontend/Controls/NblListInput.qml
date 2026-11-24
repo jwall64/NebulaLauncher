@@ -96,7 +96,6 @@ Item {
                 anchors.centerIn: labelBg
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 text: root.label
                 color: Theme.colors.textDim
             }
@@ -174,7 +173,7 @@ Item {
                                                 text: ""
                                                 font.family: Theme.font
                                                 font.pixelSize: 20
-                                                font.weight: 600
+                                                font.variableAxes: { "wght": 600 }
                                                 color: itemControls.index == 0 ? Theme.colors.textDim : Theme.colors.text
                                             }
 
@@ -208,7 +207,7 @@ Item {
                                                 text: ""
                                                 font.family: Theme.font
                                                 font.pixelSize: 20
-                                                font.weight: 600
+                                                font.variableAxes: { "wght": 600 }
                                                 color: (itemControls.index + 1) == root.count ? Theme.colors.textDim : Theme.colors.text
                                             }
 
@@ -247,7 +246,7 @@ Item {
                                         text: ""
                                         font.family: Theme.font
                                         font.pixelSize: 24
-                                        font.weight: 600
+                                        font.variableAxes: { "wght": 600 }
                                         color: parent.enabled ? Theme.colors.text : Theme.colors.textDim
                                     }
 
@@ -288,7 +287,7 @@ Item {
                 verticalAlignment: Qt.AlignVCenter
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 600
+                font.variableAxes: { "wght": 600 }
                 text: "+ New"
                 color: Theme.colors.text
             }

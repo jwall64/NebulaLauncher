@@ -21,19 +21,25 @@
  * \brief Main application entry point.
  */
 
-#include <qqml.h>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QIcon>
 
 #include <Core/String.hpp>
 #include <Platform/Logging.hpp>
+#include <Media/MediaImageProvider.hpp>
 
-#include "Media/MediaImageProvider.hpp"
 #include "ApplicationContext.hpp"
 
 int run(int argc, char** argv) {
-    
+
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
+        qputenv("QT_QUICK_CONTROLS_STYLE", "Fusion");
+    }
+
     QGuiApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/qt/qml/Nebula/images/Nebula.png"));
+    
     QQmlApplicationEngine engine{};
 
     engine.addImageProvider(QLatin1String("nblmedia"), new nbl::frontend::MediaImageProvider());

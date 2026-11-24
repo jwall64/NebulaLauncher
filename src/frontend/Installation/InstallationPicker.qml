@@ -100,7 +100,6 @@ Item {
                 color: Theme.colors.text
                 font.family: Theme.font
                 font.pixelSize: parent.height / 2
-                font.weight: 500
                 elide: Text.ElideRight
             }
 
@@ -259,7 +258,6 @@ Item {
                                     color: Theme.colors.text
                                     font.family: Theme.font
                                     font.pixelSize: parent.height / 2
-                                    font.weight: 500
                                     elide: Text.ElideRight
                                 }
 
@@ -350,7 +348,6 @@ Item {
                         verticalAlignment: Qt.AlignVCenter
                         font.family: Theme.font
                         font.pixelSize: 16
-                        font.weight: 500
                         text: "+ Add Installation"
                         color: Theme.colors.text
                     }

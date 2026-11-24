@@ -124,7 +124,7 @@ Column {
                                 text: "Complete"
                                 color: Theme.colors.mixSourceOver(setColumn.modelData.awardColor, Theme.colors.accent)
                                 font.pixelSize: 16
-                                font.weight: 600
+                                font.variableAxes: { "wght": 600 }
                                 elide: Text.ElideRight
                             }
                             Label {

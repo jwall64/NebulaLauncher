@@ -347,7 +347,6 @@ Item {
                 Label {
                     font.family: Theme.font
                     font.pixelSize: 24
-                    font.weight: 500
                     color: Theme.colors.text
                     text: root.details.title
                 }
@@ -357,7 +356,7 @@ Item {
 
                     font.family: Theme.font
                     font.pixelSize: 16
-                    font.weight: 400
+                    font.variableAxes: { "wght": 400 }
                     wrapMode: Text.WordWrap
 
                     color: Theme.colors.textDim
@@ -409,12 +408,12 @@ Item {
                             RowLayout {
                                 spacing: 4
                                 Label {
-                                    font.weight: 600
+                                    font.variableAxes: { "wght": 600 }
                                     color: Theme.colors.text
                                     text: "Achievements"
                                 }
                                 Label {
-                                    font.weight: 600
+                                    font.variableAxes: { "wght": 600 }
                                     color: Theme.colors.textDim
                                     text: `(${achievementsSection.unlockedCount} / ${achievementsSection.totalCount}) (${(100.0 * (achievementsSection.unlockedCount / achievementsSection.totalCount)).toFixed(0)}%)`
                                 }
@@ -487,7 +486,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 16
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.text
                         text: "Tags"
                     }
@@ -526,7 +525,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 16
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.text
                         text: "Metadata"
                     }
@@ -534,7 +533,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Release Date: " + Theme.formatDate(root.details.releaseDate)
                     }
@@ -542,7 +541,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Added: " + Theme.formatDate(root.details.added)
                     }
@@ -550,7 +549,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Last played: " + (root.details.lastPlayed == 0 ? "Never" : Theme.formatDate(root.details.lastPlayed))
                     }
@@ -559,7 +558,7 @@ Item {
                         visible: root.details.rating > 0
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Rating: " + root.details.rating.toFixed(1) + "%"
                     }
@@ -567,7 +566,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Play time: " + root._formatElapsedTime(root.details.playTime)
                     }
@@ -575,7 +574,7 @@ Item {
                     Label {
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: 600
+                        font.variableAxes: { "wght": 600 }
                         color: Theme.colors.textDim
                         text: "Play count: " + root.details.playCount
                     }

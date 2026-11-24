@@ -102,7 +102,6 @@ SettingsTab {
                                     Layout.fillWidth: true
                                     Layout.preferredWidth: 240
                                     font.pixelSize: 16
-                                    font.weight: 500
                                     text: accountItem.modelData.username
                                     color: Theme.colors.text
                                     verticalAlignment: Qt.AlignVCenter
@@ -112,7 +111,6 @@ SettingsTab {
                                     Layout.fillWidth: true
                                     Layout.preferredWidth: 16
                                     font.pixelSize: 16
-                                    font.weight: 500
                                     text: ""
                                     color: "#d9a107"
                                     visible: accountItem.expired
@@ -139,7 +137,6 @@ SettingsTab {
                                     inactiveColor: Theme.colors.layer1
                                     textColor: enabled ? Theme.colors.text : Theme.colors.textDim
                                     centered: true
-                                    font.weight: 500
                                     visible: accountItem.expired
                                     enabled: providerRepeater.loggingInIndex == -1
                                     onClicked: {
@@ -158,7 +155,6 @@ SettingsTab {
                                     inactiveColor: Theme.colors.layer1
                                     textColor: enabled ? Theme.colors.text : Theme.colors.textDim
                                     centered: true
-                                    font.weight: 500
                                     enabled: providerRepeater.loggingInIndex == -1
                                     onClicked: {
                                         accountRepeater.model.logout(accountItem.modelData.id)
@@ -201,7 +197,6 @@ SettingsTab {
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: implicitWidth
                                 font.pixelSize: 16
-                                font.weight: 500
                                 text: "Logging in..."
                                 color: Theme.colors.textDim
                                 verticalAlignment: Qt.AlignVCenter
@@ -212,7 +207,6 @@ SettingsTab {
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
                                 font.pixelSize: 16
-                                font.weight: 500
                                 elide: Text.ElideRight
                                 text: ""
                                 color: Theme.colors.textDim
@@ -273,7 +267,6 @@ SettingsTab {
                             inactiveColor: Theme.colors.layer1
                             textColor: enabled ? Theme.colors.text : Theme.colors.textDim
                             centered: true
-                            font.weight: 500
                             onClicked: {
                                 providerItem.adding = true
                             }

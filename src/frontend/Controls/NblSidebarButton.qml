@@ -86,7 +86,6 @@ Item {
                 text: root.name
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 elide: Qt.ElideRight
                 horizontalAlignment: root.alignment
                 color: mouseArea.containsMouse ? Theme.colors.text : Theme.colors.textDim

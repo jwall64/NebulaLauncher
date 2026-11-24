@@ -39,7 +39,10 @@ class TagSearchModel : public PagedListModel {
 public:
 
     explicit TagSearchModel(QObject* parent = nullptr) :
-        PagedListModel(parent)
+        PagedListModel(parent),
+        _bExactMatch(false),
+        _mSearchQuery{},
+        _mData{}
     { 
         setPaused(true);
     }

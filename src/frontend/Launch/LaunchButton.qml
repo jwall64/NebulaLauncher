@@ -178,7 +178,6 @@ Item {
                 text: root.message
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 color: Theme.colors.textDim
             }
         }
@@ -246,7 +245,6 @@ Item {
                 text: "Stopping..."
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 color: Theme.colors.textDim
             }
         }

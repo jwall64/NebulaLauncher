@@ -111,6 +111,12 @@ if(WIN32)
     )
 endif()
 
+install(TARGETS Nebula_Api
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 if(NBL_ENABLE_ASAN)
     if(MSVC)
         target_compile_options(Nebula_Api PUBLIC /fsanitize=address)

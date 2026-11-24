@@ -141,7 +141,6 @@ Item {
                 anchors.centerIn: labelBg
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 text: root.label
                 color: Theme.colors.textDim
             }
@@ -177,7 +176,6 @@ Item {
                     Layout.fillHeight: true
                     Layout.fillWidth: true
                     font.pixelSize: 16
-                    font.weight: 500
                     text: root.selectedName
                     color: Theme.colors.text
                     verticalAlignment: Qt.AlignVCenter
@@ -187,7 +185,7 @@ Item {
                     Layout.fillHeight: true
                     Layout.preferredWidth: height
                     font.pixelSize: 16
-                    font.weight: 600
+                    font.variableAxes: { "wght": 600 }
                     text: ""
                     color: Theme.colors.text
                     verticalAlignment: Qt.AlignVCenter
@@ -262,7 +260,6 @@ Item {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                             font.pixelSize: 16
-                            font.weight: 500
                             text: "Default"
                             color: Theme.colors.text
                             verticalAlignment: Qt.AlignVCenter
@@ -324,7 +321,6 @@ Item {
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
                                 font.pixelSize: 16
-                                font.weight: 500
                                 text: accountItem.modelData.username
                                 color: Theme.colors.text
                                 verticalAlignment: Qt.AlignVCenter

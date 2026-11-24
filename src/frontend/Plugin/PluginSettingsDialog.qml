@@ -52,7 +52,6 @@ NblDialog {
             Label {
                 text: root.pluginName + " Settings"
                 font.family: Theme.font
-                font.weight: 500
                 font.pixelSize: 16
             }
 

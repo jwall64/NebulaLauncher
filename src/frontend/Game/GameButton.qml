@@ -173,7 +173,6 @@ Item {
             horizontalAlignment: root.titleAlignment
 
             font.family: Theme.font
-            font.weight: 500
             font.pixelSize: 16
             color: Theme.colors.text
         }
@@ -203,7 +202,6 @@ Item {
                 elide: Text.ElideRight
 
                 font.family: Theme.font
-                font.weight: 500
                 font.pixelSize: 16
                 color: Theme.colors.textDim
             }

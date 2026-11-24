@@ -60,7 +60,7 @@ Control {
 
             font.pixelSize: root.textSize
             font.family: Theme.font
-            font.weight: 600
+            font.variableAxes: { "wght": 600 }
             color: Theme.colors.readableOn(root.color)
         }
 

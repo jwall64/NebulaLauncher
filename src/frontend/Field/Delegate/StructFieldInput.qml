@@ -60,7 +60,6 @@ FieldInputDelegate {
                 anchors.centerIn: labelBg
                 font.family: Theme.font
                 font.pixelSize: 16
-                font.weight: 500
                 text: root.field.name
                 color: Theme.colors.textDim
             }

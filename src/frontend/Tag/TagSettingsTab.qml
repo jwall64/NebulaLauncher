@@ -166,7 +166,6 @@ SettingsTab {
                 Label {
                     anchors.centerIn: parent
                     font.pixelSize: 16
-                    font.weight: 500
                     color: Theme.colors.textOnAccent
                     text: "Add"
                 }

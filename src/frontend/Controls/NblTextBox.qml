@@ -77,7 +77,6 @@ TextField {
             id: labelText
             text: root.label
             font.family: Theme.font
-            font.weight: 500
             color: root.enabled 
                 ? root.cursorVisible 
                     ? Theme.colors.accent 

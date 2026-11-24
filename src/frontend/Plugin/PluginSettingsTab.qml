@@ -76,7 +76,7 @@ SettingsTab {
                                 Label {
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    font.weight: 600
+                                    font.variableAxes: { "wght": 600 }
                                     color: Theme.colors.text
                                     text: pluginItem.modelData.name + " (v" + pluginItem.modelData.version + ")"
                                     elide: Text.ElideRight

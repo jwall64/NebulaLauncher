@@ -120,7 +120,7 @@ QtObject {
             source: "qrc:/qt/qml/Nebula/fonts/NotoSansDisplay-VariableFont_wdth,wght.ttf"
         }
         property FontLoader italicFont: FontLoader {
-            source: "qrc:/qt/qml/Nebula/fonts/NotoSansDisplay-VariableFont_wdth,wght.ttf"
+            source: "qrc:/qt/qml/Nebula/fonts/NotoSansDisplay-Italic-VariableFont_wdth,wght.ttf"
         }
         property FontLoader nerdFont: FontLoader {
             source: "qrc:/qt/qml/Nebula/fonts/NotoSansMNerdFontPropo-Regular.ttf"

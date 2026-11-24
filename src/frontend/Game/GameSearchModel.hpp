@@ -40,7 +40,8 @@ public:
         PagedListModel(parent),
         _bExactMatch(false),
         _bIncludeNewGame(false),
-        _mSearchQuery{}
+        _mSearchQuery{},
+        _mData{}
     { }
 
     enum Roles {

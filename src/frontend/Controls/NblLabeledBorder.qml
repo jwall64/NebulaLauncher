@@ -31,7 +31,6 @@ Control {
     default property alias content: contentItem.children
 
     font.family: Theme.font
-    font.weight: 500
     padding: 4
 
     Rectangle {
