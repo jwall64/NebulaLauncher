@@ -54,8 +54,10 @@ nbl::DynamicLibrary::~DynamicLibrary() {
 nbl::Result nbl::DynamicLibrary::_findSymbol(StringView name, void** outSym) {
 
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
-    nbl::StringView zName;
-    NBL_CHECK(nbl::StringBuilder::nullTerminate(name, &zName, &frame));
+
+    if(!name.nullTerminated()) {
+        NBL_CHECK(nbl::StringBuilder::nullTerminate(name, &name, &frame));
+    }
 
     dlerror(); // Clear dlerror
     void* sym = dlsym(_pHandle, name.data());
@@ -76,10 +78,10 @@ nbl::Result nbl::DynamicLibrary::load(StringView path, DynamicLibrary* outLibrar
         return nbl::Result::INVALID_ARGUMENT;
     }
 
-
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
-    nbl::StringView zPath;
-    NBL_CHECK(nbl::StringBuilder::nullTerminate(path, &zPath, &frame));
+    if(!path.nullTerminated()) {
+        NBL_CHECK(nbl::StringBuilder::nullTerminate(path, &path, &frame));
+    }
 
     void* handle = ::dlopen(zPath.data(), RTLD_LAZY);
     if(handle == nullptr) {

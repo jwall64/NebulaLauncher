@@ -111,12 +111,6 @@ if(WIN32)
     )
 endif()
 
-install(TARGETS Nebula_Api
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
 if(NBL_ENABLE_ASAN)
     if(MSVC)
         target_compile_options(Nebula_Api PUBLIC /fsanitize=address)
@@ -126,12 +120,23 @@ if(NBL_ENABLE_ASAN)
     endif()
 endif()
 
+install(TARGETS Nebula_Api
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 
 file(GLOB_RECURSE NBL_WRAPPER_SOURCES ${NBL_SRC_DIR}/wrapper/**.cpp)
 
 add_executable(Nebula_Wrapper ${NBL_WRAPPER_SOURCES})
 target_include_directories(Nebula_Wrapper PRIVATE ${NBL_SRC_DIR}/wrapper)
 target_link_libraries(Nebula_Wrapper PRIVATE Nebula_Api)
+
+install(TARGETS Nebula_Wrapper
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
 
 if(${NBL_BUILD_TEST_PLUGIN}) 
 
@@ -152,6 +157,14 @@ if(${NBL_BUILD_TEST_PLUGIN})
         COMMAND ${CMAKE_COMMAND} -E copy "${NBL_SRC_DIR}/test_plugin/plugin.json" "${CMAKE_BINARY_DIR}/bin/plugins/test_plugin"
         VERBATIM
     )
+    
+    install(TARGETS Nebula_TestPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/test
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/test_plugin/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/test")
 
 endif()
 
@@ -174,6 +187,13 @@ if(${NBL_BUILD_SGDB_PLUGIN})
         COMMAND ${CMAKE_COMMAND} -E copy "${NBL_SRC_DIR}/plugin_sgdb/plugin.json" "${CMAKE_BINARY_DIR}/bin/plugins/sgdb"
         VERBATIM
     )
+    install(TARGETS Nebula_SgdbPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/sgdb
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/plugin_sgdb/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/sgdb")
 endif()
 
 if(${NBL_BUILD_IGDB_PLUGIN}) 
@@ -195,7 +215,14 @@ if(${NBL_BUILD_IGDB_PLUGIN})
         COMMAND ${CMAKE_COMMAND} -E copy "${NBL_SRC_DIR}/plugin_igdb/plugin.json" "${CMAKE_BINARY_DIR}/bin/plugins/igdb"
         VERBATIM
     )
-
+    
+    install(TARGETS Nebula_IgdbPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/igdb
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/plugin_igdb/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/igdb")
 endif()
 
 
@@ -221,6 +248,14 @@ if(${NBL_BUILD_RA_PLUGIN})
             "${CMAKE_BINARY_DIR}/bin/plugins/retroachievements"
         VERBATIM
     )
+    
+    install(TARGETS Nebula_RaPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/retroachievements
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/plugin_retroachievements/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/retroachievements")
 endif()
 
 
@@ -243,7 +278,14 @@ if(${NBL_BUILD_MINECRAFT_PLUGIN})
         COMMAND ${CMAKE_COMMAND} -E copy "${NBL_SRC_DIR}/plugin_minecraft/plugin.json" "${CMAKE_BINARY_DIR}/bin/plugins/minecraft"
         VERBATIM
     )
-
+    
+    install(TARGETS Nebula_MinecraftPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/minecraft
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/plugin_minecraft/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/minecraft")
 endif()
 
 if(${NBL_BUILD_STEAM_PLUGIN}) 
@@ -289,7 +331,14 @@ if(${NBL_BUILD_STEAM_PLUGIN})
         COMMAND ${CMAKE_COMMAND} -E copy "${NBL_SRC_DIR}/plugin_steam/plugin.json" "${CMAKE_BINARY_DIR}/bin/plugins/steam"
         VERBATIM
     )
-
+    
+    install(TARGETS Nebula_SteamPlugin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/plugins/steam
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES "${NBL_SRC_DIR}/plugin_steam/plugin.json" 
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins/steam")
 endif()
 
 

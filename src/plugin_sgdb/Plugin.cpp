@@ -455,7 +455,7 @@ nbl::Array _pluginFields {
 
 }
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context) {
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context) {
 
     nbl::log(nbl::LogLevel::INFO, "Initializing SteamGridDB plugin...");
     NBL_CHECK(context->registerObject(&_provider));
@@ -482,8 +482,8 @@ extern "C" i32 initPlugin(nbl::PluginInitContext* context) {
 
     NBL_CHECK(nbl::HttpClient::create(1, 1, 0, 0, &_httpClient));
 
-    NBL_CHECK(nbl::StringBuilder(&frame).append(context->pluginDataPath()).append("/sgdb").buildNullTerminated(&pluginFolder));
-    NBL_CHECK(nbl::StringBuilder(&frame).append(pluginFolder).append("/apikey.txt").buildNullTerminated(&apiKeyPath));
+    NBL_CHECK(nbl::StringBuilder(&frame).append(context->pluginDataPath()).append(NBL_PATH_SEPARATOR).append("sgdb").buildNullTerminated(&pluginFolder));
+    NBL_CHECK(nbl::StringBuilder(&frame).append(pluginFolder).append(NBL_PATH_SEPARATOR).append("apikey.txt").buildNullTerminated(&apiKeyPath));
     NBL_CHECK(nbl::makeDirectories(pluginFolder));
 
     nbl::FileChannel channel;

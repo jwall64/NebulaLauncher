@@ -673,7 +673,7 @@ nbl::Result _loadConfig(nbl::Span<nbl::FieldValue> values) {
 
 }
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context) {
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context) {
 
     nbl::log(nbl::LogLevel::INFO, "Initializing IGDB plugin...");
     NBL_CHECK(context->registerObject(&_provider));

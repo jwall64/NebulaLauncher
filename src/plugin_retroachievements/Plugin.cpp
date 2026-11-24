@@ -463,7 +463,7 @@ nbl::AchievementProvider _achProvider {
 }
 
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context) {  
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context) {
 
 
     nbl::log(nbl::LogLevel::INFO, "Initializing RetroAchievements plugin...");
@@ -472,7 +472,7 @@ extern "C" i32 initPlugin(nbl::PluginInitContext* context) {
 
     NBL_CHECK(nbl::HttpClient::create(1, 1, 0, 0, &_httpClient));
 
-    nbl::StringBuilder(&_localAlloc).append(context->installFolder()).append("/ra.db").buildNullTerminated(&_db_path);
+    nbl::StringBuilder(&_localAlloc).append(context->installFolder()).append(NBL_PATH_SEPARATOR).append("ra.db").buildNullTerminated(&_db_path);
     usize padding = nbl::alignUp(_localAlloc.index(), 8);
     if(padding > 0) {
         _localAlloc.push(padding, nullptr);

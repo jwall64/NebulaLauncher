@@ -154,12 +154,12 @@ nbl::InstallationType _type = {
 }
 
 
-extern "C" i32 initPlugin(nbl::PluginInitContext *context) {
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext *context) {
 
     {
         nbl::StringView launcherRoot{};
         nbl::AllocationFrame frame(nbl::Arena::threadLocal());
-        NBL_CHECK(nbl::StringBuilder(&frame).append(context->pluginDataPath()).append("/minecraft").buildNullTerminated(&launcherRoot));
+        NBL_CHECK(nbl::StringBuilder(&frame).append(context->pluginDataPath()).append(NBL_PATH_SEPARATOR).append("minecraft").buildNullTerminated(&launcherRoot));
         NBL_CHECK(nbl::mc::MinecraftLauncher::init(launcherRoot, &_launcher));
     }
     context->registerObject(&_type);

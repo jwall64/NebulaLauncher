@@ -24,6 +24,13 @@
 #pragma once
 
 #include <Plugin/PluginInitContext.hpp>
+#include <Platform/PlatformDefines.hpp>
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context);
+#ifdef NBL_PLATFORM_WINDOWS
+#define NBL_EXPORT __declspec(dllexport)
+#else
+#define NBL_EXPORT __attribute__((visibility("default")))
+#endif
+
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context);
 

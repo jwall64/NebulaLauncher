@@ -77,7 +77,7 @@ nbl::Result nbl::PluginLoader::_loadAll() {
 
         nbl::AllocationFrame frame(nbl::Arena::threadLocal());
         nbl::StringView fullPath = {};
-        NBL_CHECK(nbl::StringBuilder(&frame).append(_mPluginFolder).append('/').append(pluginFolder).build(&fullPath));
+        NBL_CHECK(nbl::StringBuilder(&frame).append(_mPluginFolder).append(NBL_PATH_SEPARATOR).append(pluginFolder).build(&fullPath));
 
         nbl::Result res = _load(fullPath, &builder);
         if(res.error()) {
@@ -141,12 +141,12 @@ nbl::Result nbl::PluginLoader::_load(StringView folder, Registry::Builder* regis
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
 
     StringView manifestPath{};
-    NBL_CHECK(StringBuilder(&frame).append(folder).append("/plugin.json").build(&manifestPath));
+    NBL_CHECK(StringBuilder(&frame).append(folder).append(NBL_PATH_SEPARATOR).append("plugin.json").buildNullTerminated(&manifestPath));
 
-    FileChannel manifestStream;
+    FileChannel manifestStream{};
     NBL_CHECK(FileChannel::open(manifestPath, &manifestStream, FileOpenFlag::READ));
 
-    JsonElement value = {};
+    JsonElement value{};
     NBL_CHECK(parseJson(manifestStream.reader(), &frame, &value));
     if(value.type() != JsonType::OBJECT) return nbl::Result::INVALID_ARGUMENT;
 
@@ -163,13 +163,20 @@ nbl::Result nbl::PluginLoader::_load(StringView folder, Registry::Builder* regis
         NBL_CHECK(StringBuilder(&_mDataArena).append(description).buildNullTerminated(&lp->meta.description));
         NBL_CHECK(StringBuilder(&_mDataArena).append(version).buildNullTerminated(&lp->meta.version));
 
+        NBL_DEBUG("Initializing plugin: ", id);
+
         StringView libraryPath = {};
-        NBL_CHECK(StringBuilder(&frame).append(folder).append("/plugin").append(dynamicLibraryFileExt()).build(&libraryPath));
+        NBL_CHECK(StringBuilder(&frame).append(folder).append(NBL_PATH_SEPARATOR).append("plugin").append(dynamicLibraryFileExt()).buildNullTerminated(&libraryPath));
 
         NBL_CHECK(nbl::DynamicLibrary::load(libraryPath, &lp->lib));
 
         i32(*initFunc)(nbl::PluginInitContext*);
         NBL_CHECK(lp->lib.findSymbol("initPlugin", &initFunc));
+
+        if(initFunc == nullptr) {
+            NBL_ERROR("An error occurred while initializing a plugin! Could not find initPlugin()");
+            return nbl::Result::PLUGIN_ERROR;
+        }
 
         PluginInitContext ctx;
         NBL_CHECK(PluginInitContext::create(registrations, lp, _pContext, folder, &ctx));
@@ -179,6 +186,7 @@ nbl::Result nbl::PluginLoader::_load(StringView folder, Registry::Builder* regis
             NBL_ERROR("An error occurred while initializing a plugin! ", rc);
             return nbl::Result::PLUGIN_ERROR;
         }
+        NBL_INFO("Initialized plugin: ", name, " version ", version);
         return nbl::Result::SUCCESS;
     };
     

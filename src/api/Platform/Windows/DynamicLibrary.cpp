@@ -55,9 +55,9 @@ nbl::DynamicLibrary::~DynamicLibrary() {
 nbl::Result nbl::DynamicLibrary::_findSymbol(StringView name, void** outSym) {
 
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
-    nbl::StringView zName;
-    NBL_CHECK(nbl::StringBuilder::nullTerminate(name, &zName, &frame));
-
+    if(!name.nullTerminated()) {
+        NBL_CHECK(nbl::StringBuilder::nullTerminate(name, &name, &frame));
+    }
     FARPROC sym = GetProcAddress(*reinterpret_cast<HMODULE*>(&_pHandle), name.data());
 
     if(sym == nullptr) {
@@ -74,7 +74,6 @@ nbl::Result nbl::DynamicLibrary::load(StringView path, DynamicLibrary* outLibrar
     if(path.length() == 0) {
         return nbl::Result::INVALID_ARGUMENT;
     }
-
 
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
 

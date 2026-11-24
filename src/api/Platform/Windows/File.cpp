@@ -117,13 +117,17 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
 
     if(flags & FileOpenFlag::READ) {
         desiredAccess |= GENERIC_READ;
-    } else if(flags & FileOpenFlag::WRITE) {
+    } 
+    if(flags & FileOpenFlag::WRITE) {
         desiredAccess |= GENERIC_WRITE;
-    } else {
+    }
+    
+    if(desiredAccess == 0) {
         return nbl::Result::INVALID_ARGUMENT;
     }
 
     if(flags & FileOpenFlag::CREATE) {
+        desiredAccess |= GENERIC_WRITE;
         if(flags & FileOpenFlag::APPEND) {
             creationDisposition = OPEN_ALWAYS;
         }
@@ -138,7 +142,7 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
         }
     }
     else {
-        if(flags & FileOpenFlag::APPEND) {
+        if(flags & FileOpenFlag::APPEND || !(flags & FileOpenFlag::WRITE)) {
             creationDisposition = OPEN_EXISTING;
         }
         else {
@@ -161,7 +165,7 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
     outChannel->_mHandle = CreateFileW(
         fileName,
         desiredAccess,
-        FILE_SHARE_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr,
         creationDisposition,
         0,
@@ -169,8 +173,15 @@ nbl::Result nbl::FileChannel::open(StringView path, FileChannel* outChannel, Fil
     );
 
     if(outChannel->_mHandle == INVALID_HANDLE_VALUE) {
+        DWORD err = GetLastError();
+        NBL_DEBUG("Failed to open file: ", path, " (", err, ")");
+
         outChannel->_mHandle = nullptr;
-        return nbl::Result::IO_ERROR;
+        switch(err) {
+            case ERROR_FILE_NOT_FOUND: return nbl::Result::NOT_FOUND;
+            case ERROR_TOO_MANY_OPEN_FILES: return nbl::Result::TOO_MANY_OPEN_FILES;
+            default: nbl::Result::IO_ERROR;
+        }
     }
 
     return nbl::Result::SUCCESS;
@@ -393,13 +404,13 @@ nbl::Result nbl::makeDirectories(StringView path) {
 
         AllocationFrame frame(Arena::threadLocal());
 
-        usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), nullptr, 0);
+        usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), index, nullptr, 0);
         if(sz == 0) return Result::INVALID_ARGUMENT;
 
         wchar_t* folderPath;
 
         frame.allocate(&folderPath, sz + 1);
-        if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), path.length(), folderPath, sz)) {
+        if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(), index, folderPath, sz)) {
             return Result::INVALID_ARGUMENT;
         }
 
@@ -489,10 +500,10 @@ bool nbl::isExecutable(StringView path) {
 
     if(h != INVALID_HANDLE_VALUE) {
         CloseHandle(h);
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 nbl::Result nbl::setExecutable(StringView path) {

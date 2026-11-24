@@ -384,7 +384,7 @@ nbl::Array _pluginFields {
 }
 
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context) {
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context) {
 
     nbl::log(nbl::LogLevel::INFO, "Hello from plugin");
 

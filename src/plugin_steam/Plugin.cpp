@@ -23,12 +23,13 @@
 #include <Platform/Allocator.hpp>
 #include <Platform/DynamicLibrary.hpp>
 #include <Platform/Process.hpp>
+#include <Platform/Arena.hpp>
+#include <Platform/File.hpp>
 #include <Utility/StringBuilder.hpp>
 #include <Plugin/PluginContext.hpp>
 #include <Core/Span.hpp>
 #include <Core/String.hpp>
 #include <Data/Model.hpp>
-#include <Platform/Arena.hpp>
 
 
 #include "Constants.hpp"
@@ -214,12 +215,12 @@ nbl::AchievementProvider _achProvider {
 }
 
 
-extern "C" i32 initPlugin(nbl::PluginInitContext* context) {  
+extern "C" i32 NBL_EXPORT initPlugin(nbl::PluginInitContext* context) {
     NBL_INFO("Initializing Steam plugin...");
 
     {
         nbl::InPlaceAllocator alloc(_wrapperPathBuf, 4096);
-        NBL_CHECK(nbl::StringBuilder(&alloc).append(context->installFolder()).append("/AchievementClient").append(nbl::executableFileExt()).buildNullTerminated(&_clientPath));
+        NBL_CHECK(nbl::StringBuilder(&alloc).append(context->installFolder()).append(NBL_PATH_SEPARATOR).append("AchievementClient").append(nbl::executableFileExt()).buildNullTerminated(&_clientPath));
     }
 
     context->registerObject(&_achProvider);

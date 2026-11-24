@@ -26,13 +26,16 @@ nbl::Result nbl::win::readHandle(void* impl, void* data, usize length, usize* by
     HANDLE h = impl;
 
     DWORD toRead = static_cast<DWORD>(min(length, 0xFFFFFFFF));
-    DWORD read;
+    DWORD read = 0;
 
     if(!ReadFile(h, data, toRead, &read, nullptr)) {
         return Result::IO_ERROR;
     }
     if(bytesRead) {
         *bytesRead = static_cast<usize>(read);
+    }
+    if(read == 0) {
+        return nbl::Result::END_OF_STREAM;
     }
     return nbl::Result::SUCCESS;
 }
