@@ -53,27 +53,34 @@ nbl::Result nbl::PluginInitContext::create(Registry::Builder* builder, LoadedPlu
 }
 
 nbl::Result nbl::PluginInitContext::getStoredFieldsObject(JsonObject* outValues, StringView* outVersion, LinearAllocator* allocator) {
-    return nbl::getPluginFields(_pContext->databaseConnection(), getMeta()->id, [&](const PluginFields& fields) -> nbl::Result {
-        JsonElement e;
+    *outValues = {};
+    *outVersion = {};
+    nbl::Result res = nbl::getPluginFields(_pContext->databaseConnection(), getMeta()->id, [&](const PluginFields& fields) -> nbl::Result {
+        JsonElement e{};
         NBL_CHECK(nbl::parseJson(fields.fieldsJson, allocator, &e));
         if(e.type() != JsonType::OBJECT) return nbl::Result::FORMAT_ERROR;
         *outValues = e.asObject();
         NBL_CHECK(nbl::StringBuilder(allocator).append(fields.version).buildNullTerminated(outVersion));
         return nbl::Result::SUCCESS;
     });
+    if(res == Result::NOT_FOUND) return nbl::Result::SUCCESS;
+    return res;
 }
 
 nbl::Result nbl::PluginInitContext::getStoredFieldsVersion(StringView* outVersion, LinearAllocator* allocator) {
-    return nbl::getPluginFieldsVersion(_pContext->databaseConnection(), getMeta()->id, [&](const PluginFields& fields) -> nbl::Result {
+    *outVersion = {};
+    nbl::Result res = nbl::getPluginFieldsVersion(_pContext->databaseConnection(), getMeta()->id, [&](const PluginFields& fields) -> nbl::Result {
         NBL_CHECK(nbl::StringBuilder(allocator).append(fields.version).buildNullTerminated(outVersion));
         return nbl::Result::SUCCESS;
     });
+    if(res == Result::NOT_FOUND) return nbl::Result::SUCCESS;
+    return res;
 }
 
 nbl::Result nbl::PluginInitContext::getStoredFieldValues(Span<Field> fields, Span<FieldValue>* outValues, LinearAllocator* allocator) {
 
-    JsonObject obj;
-    StringView ver;
+    JsonObject obj{};
+    StringView ver{};
     NBL_CHECK(getStoredFieldsObject(&obj, &ver, allocator));
 
     return decodeFieldValues(_pContext, fields, obj, outValues, allocator);
