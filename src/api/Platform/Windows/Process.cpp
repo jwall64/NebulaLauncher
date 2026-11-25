@@ -38,6 +38,346 @@
 
 #include <Platform/Logging.hpp>
 
+
+namespace {
+
+
+nbl::Result _launchSubprocess(nbl::StringView commandLine, const nbl::ProcessCreateOptions& options, HANDLE* outHandle, HANDLE* outStdoutHandle, HANDLE* outJobHandle) {
+
+    nbl::AllocationFrame frame(nbl::Arena::threadLocal());
+
+    HANDLE readPipe;
+    HANDLE writePipe;
+    if(options.outputMode == nbl::ProcessOutputMode::PIPE) {
+        if(!CreatePipe(&readPipe, &writePipe, 0, 0)) {
+            return nbl::Result::PROCESS_ERROR;
+        }
+    }
+    else if(options.outputMode == nbl::ProcessOutputMode::REDIRECT) {
+        if(options.outputRedirectFile.empty()) {
+            return nbl::Result::INVALID_ARGUMENT;
+        }
+    }
+
+    usize wsize = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, commandLine.data(), commandLine.length(), nullptr, 0);
+    if(wsize == 0) return nbl::Result::INVALID_ARGUMENT;
+
+    wchar_t* wdata;
+    NBL_CHECK(frame.allocate(&wdata, wsize + 1));
+
+    if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, commandLine.data(), commandLine.length(), wdata, wsize)) {
+        return nbl::Result::INVALID_ARGUMENT;
+    }
+    wdata[wsize] = 0;
+
+    void* env = nullptr;
+    if(options.environment.length() > 0) {
+
+        nbl::Span<nbl::Span<wchar_t>> vars(nullptr, options.environment.length());
+        nbl::Span<nbl::Span<wchar_t>> values(nullptr, vars.length());
+        nbl::Span<usize> indices(nullptr, vars.length());
+
+        frame.allocate(&vars);
+        frame.allocate(&values);
+        frame.allocate(&indices);
+
+        for(usize i = 0; i < vars.length(); i++) {
+            nbl::StringView var = options.environment[i].variable;
+            nbl::StringView value = options.environment[i].value;
+
+            indices[i] = i;
+
+            usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, var.data(), var.length(), nullptr, 0);
+            if(sz == 0) return nbl::Result::INVALID_ARGUMENT;
+
+            vars[i] = nbl::Span<wchar_t>(nullptr, sz + 1);
+
+            frame.allocate(&values[i]);
+            if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, var.data(), var.length(), values[i].data(), sz)) {
+                return nbl::Result::INVALID_ARGUMENT;
+            }
+
+
+            sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(), value.length(), nullptr, 0);
+            if(sz == 0) return nbl::Result::INVALID_ARGUMENT;
+
+            values[i] = nbl::Span<wchar_t>(nullptr, sz + 1);
+
+            frame.allocate(&values[i]);
+            if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(), value.length(), values[i].data(), sz)) {
+                return nbl::Result::INVALID_ARGUMENT;
+            }
+        }
+
+        auto cmp = [&](const usize& i1, const usize& i2) -> i32 {
+            i32 out = CompareStringOrdinal(
+                vars[i1].data(), static_cast<int>(vars[i1].length()),
+                vars[i2].data(), static_cast<int>(vars[i2].length()),
+                TRUE) == CSTR_LESS_THAN;
+            return out;
+            };
+        nbl::FunctionRef<i32(const usize&, const usize&)> compareFunc = cmp;
+
+        quicksort(indices, compareFunc);
+
+
+        usize current = 0;
+
+        LPWCH parentEnv = GetEnvironmentStringsW();
+        if(parentEnv != nullptr) {
+            env = frame.end();
+
+            while(true) {
+
+                if(wcslen(parentEnv) == 0) break;
+
+                wchar_t* sep = nullptr;
+                if(parentEnv[0] == L'=') {
+                    sep = wcschr(parentEnv + 1, L'=');
+                }
+                else {
+                    sep = wcschr(parentEnv, L'=');
+                }
+
+                usize len = 0;
+                if(sep == nullptr) {
+                    len = wcslen(parentEnv);
+                }
+                else {
+                    len = sep - (parentEnv);
+                }
+                while(true) {
+                    nbl::Span<wchar_t> currentVar = vars[indices[current]];
+                    if(CompareStringOrdinal(parentEnv, len, currentVar.data(), currentVar.length(), TRUE) != CSTR_LESS_THAN) {
+                        break;
+                    }
+
+                    nbl::Span<wchar_t> currentValue = values[indices[current]];
+
+                    wchar_t* appended = nullptr;
+                    frame.allocate(&appended, currentVar.length() + 1 + currentValue.length() + 1);
+                    memcpy(appended, currentVar.data(), currentVar.length() * sizeof(wchar_t));
+                    appended[currentVar.length() * sizeof(wchar_t)] = L'=';
+                    memcpy(appended + (currentVar.length() + 1), currentValue.data(), currentValue.length() * sizeof(wchar_t));
+                    appended[(currentVar.length() + 1 + currentValue.length()) * sizeof(wchar_t)] = L'\0';
+
+                    current++;
+                }
+
+                wchar_t* end = wcschr(parentEnv, L'\0');
+                usize diff = 0;
+                if(end == nullptr) {
+                    diff = wcslen(parentEnv);
+                }
+                else {
+                    diff = end - parentEnv;
+                }
+
+                wchar_t* appended = nullptr;
+                frame.allocate(&appended, diff + 1);
+
+                memcpy(appended, parentEnv, diff);
+                appended[diff] = L'\0';
+
+                parentEnv = end + 1;
+            }
+            FreeEnvironmentStringsW(parentEnv);
+        }
+    }
+
+
+    wchar_t* workingDir = nullptr;
+
+    if(!options.workingDir.empty()) {
+        usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), nullptr, 0);
+        if(sz == 0) return nbl::Result::INVALID_ARGUMENT;
+
+        frame.allocate(&workingDir, sz + 1);
+        if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), workingDir, sz)) {
+            return nbl::Result::INVALID_ARGUMENT;
+        }
+    }
+
+    if(options.killOnClose) {
+        *outJobHandle = CreateJobObjectW(NULL, NULL);
+        if(*outJobHandle == INVALID_HANDLE_VALUE) {
+            NBL_ERROR("Failed to create job object!");
+            return nbl::Result::OS_ERROR;
+        }
+
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info = {};
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+        if(!SetInformationJobObject(*outJobHandle, JobObjectExtendedLimitInformation, &info, sizeof(info))) {
+            CloseHandle(*outJobHandle);
+            return nbl::Result::PROCESS_ERROR;
+        }
+    }
+
+    SECURITY_ATTRIBUTES security = {
+        .nLength = sizeof(SECURITY_ATTRIBUTES),
+        .lpSecurityDescriptor = nullptr,
+        .bInheritHandle = true,
+    };
+
+
+
+    HANDLE nulHandle = CreateFileW(
+        L"NUL",
+        GENERIC_WRITE | GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        &security,
+        OPEN_EXISTING,
+        0,
+        nullptr
+    );
+    if(nulHandle == INVALID_HANDLE_VALUE) {
+        return nbl::Result::IO_ERROR;
+    }
+
+
+    STARTUPINFOW startupInfo = {
+        .cb = sizeof(STARTUPINFOW),
+        .dwFlags = STARTF_USESTDHANDLES | 0,
+        .hStdInput = nulHandle
+    };
+
+
+    HANDLE pipeReader = nullptr;
+    HANDLE pipeWriter = nullptr;
+
+    switch(options.outputMode) {
+    case nbl::ProcessOutputMode::INHERIT: {
+        startupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        startupInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+        break;
+    }
+    case nbl::ProcessOutputMode::PIPE: {
+        if(!CreatePipe(&pipeReader, &pipeWriter, &security, 0)) {
+            CloseHandle(nulHandle);
+            return nbl::Result::IO_ERROR;
+        }
+
+        if(!SetHandleInformation(pipeReader, HANDLE_FLAG_INHERIT, 0)) {
+            CloseHandle(nulHandle);
+            CloseHandle(pipeReader);
+            CloseHandle(pipeWriter);
+            return nbl::Result::IO_ERROR;
+        }
+
+
+        startupInfo.hStdOutput = pipeWriter;
+        startupInfo.hStdError = nulHandle;
+
+        *outStdoutHandle = pipeReader;
+        break;
+    }
+    case nbl::ProcessOutputMode::NULLIFY: {
+        startupInfo.hStdOutput = nulHandle;
+        startupInfo.hStdError = nulHandle;
+        break;
+    }
+    case nbl::ProcessOutputMode::REDIRECT: {
+
+        usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), nullptr, 0);
+        if(sz == 0) return nbl::Result::INVALID_ARGUMENT;
+
+        wchar_t* fileName;
+
+        frame.allocate(&fileName, sz + 1);
+        if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), workingDir, sz)) {
+            return nbl::Result::INVALID_ARGUMENT;
+        }
+
+        pipeWriter = CreateFileW(
+            fileName,
+            GENERIC_WRITE,
+            FILE_SHARE_WRITE,
+            &security,
+            CREATE_ALWAYS,
+            0,
+            nullptr
+        );
+        if(pipeWriter == INVALID_HANDLE_VALUE) {
+            return nbl::Result::IO_ERROR;
+        }
+
+        startupInfo.hStdError = nulHandle;
+        break;
+    }
+    }
+
+    PROCESS_INFORMATION processInfo{};
+    if(!CreateProcessW(
+        nullptr,
+        wdata,
+        nullptr,
+        nullptr,
+        true,
+        env == nullptr ? 0 : CREATE_UNICODE_ENVIRONMENT,
+        env,
+        workingDir,
+        &startupInfo,
+        &processInfo
+    )) {
+
+        CloseHandle(nulHandle);
+        if(pipeWriter) CloseHandle(pipeWriter);
+
+        return nbl::Result::PROCESS_ERROR;
+    }
+
+    CloseHandle(nulHandle);
+    if(pipeWriter) CloseHandle(pipeWriter);
+
+    CloseHandle(processInfo.hThread);
+
+    if(options.killOnClose) {
+        if(!AssignProcessToJobObject(*outJobHandle, processInfo.hProcess)) {
+            CloseHandle(processInfo.hProcess);
+            CloseHandle(*outJobHandle);
+            return nbl::Result::PROCESS_ERROR;
+        }
+    }
+
+    *outHandle = processInfo.hProcess;
+    return nbl::Result::SUCCESS;
+}
+
+
+nbl::Result _escapeArgument(nbl::StringView arg, nbl::StringBuilder* builder) {
+
+    bool needsEscape = false;
+    for(usize i = 0; i < arg.length(); i++) {
+        char c = arg[i];
+        if(c == ' ' || c == '"') {
+            needsEscape = true;
+            break;
+        }
+    }
+
+    if(needsEscape) {
+        builder->append('"');
+        for(char c : arg) {
+            if(c == '"') {
+                builder->append('\\').append('"');
+            }
+            else {
+                builder->append(c);
+            }
+        }
+        builder->append('"');
+    }
+    else {
+        return builder->appendChecked(arg);
+    }
+
+}
+
+
+}
+
+
 nbl::StringView nbl::getHostName() {
 
 
@@ -172,6 +512,9 @@ nbl::Result nbl::sleep(u32 millis) {
 
 
 nbl::ProcessHandle::~ProcessHandle() {
+    if(_bKillOnClose) {
+        kill();
+    }
     if(_pHandle) {
         CloseHandle(_pHandle);
         _pHandle = nullptr;
@@ -238,295 +581,34 @@ nbl::Reader nbl::ProcessHandle::stdoutReader() const {
 }
 
 nbl::Result nbl::ProcessHandle::run(StringView commandLine, ProcessHandle* outHandle, const ProcessCreateOptions& options) {
-    nbl::Array<StringView, 2> args = {
-        "/c",
-        commandLine
-    };
-    return spawn("cmd.exe", args, outHandle, options);
+    nbl::AllocationFrame frame(nbl::Arena::threadLocal());
+    nbl::StringView cmd{};
+    nbl::StringBuilder(&frame).append("cmd.exe /d /s /c \"").append(commandLine).append('"').build(&cmd);
+
+    return _launchSubprocess(cmd, options, &outHandle->_pHandle, &outHandle->_pOutputHandle, &outHandle->_pJobHandle);
 }
 
 nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, ProcessHandle* outHandle, const ProcessCreateOptions& options) {
-    
-    HANDLE readPipe;
-    HANDLE writePipe;
-    if(options.outputMode == ProcessOutputMode::PIPE) {
-        if(!CreatePipe(&readPipe, &writePipe, 0, 0)) {
-            return nbl::Result::PROCESS_ERROR;
-        }
-    } else if(options.outputMode == ProcessOutputMode::REDIRECT) {
-        if(options.outputRedirectFile.empty()) {
-            return nbl::Result::INVALID_ARGUMENT;
-        }
-    }
 
     nbl::AllocationFrame frame(nbl::Arena::threadLocal());
     nbl::StringView commandLine{};
 
     nbl::StringBuilder builder(&frame);
-    builder.append('"').append(path).append('"');
+    _escapeArgument(path, &builder);
+
     for(StringView arg : args) {
-        builder.append(" \"").append(arg).append('"');
+        if(arg.empty()) {
+            builder.append(" \"\"");
+        }
+        else {
+            builder.append(' ');
+            _escapeArgument(arg, &builder);
+        }
     }
 
     NBL_CHECK(builder.build(&commandLine));
 
-    usize wsize = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, commandLine.data(), commandLine.length(), nullptr, 0);
-    if(wsize == 0) return Result::INVALID_ARGUMENT;
-
-    wchar_t* wdata;
-    NBL_CHECK(frame.allocate(&wdata, wsize + 1));
-
-    if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, commandLine.data(), commandLine.length(), wdata, wsize)) {
-        return Result::INVALID_ARGUMENT;
-    }
-    wdata[wsize] = 0;
-
-    void* env = nullptr;
-    if(options.environment.length() > 0) {
-
-        Span<Span<wchar_t>> vars(nullptr, options.environment.length());
-        Span<Span<wchar_t>> values(nullptr, vars.length());
-        Span<usize> indices(nullptr, vars.length());
-
-        frame.allocate(&vars);
-        frame.allocate(&values);
-        frame.allocate(&indices);
-
-        for(usize i = 0; i < vars.length(); i++) {
-            StringView var = options.environment[i].variable;
-            StringView value = options.environment[i].value;
-
-            indices[i] = i;
-
-            usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, var.data(), var.length(), nullptr, 0);
-            if(sz == 0) return Result::INVALID_ARGUMENT;
-
-            vars[i] = Span<wchar_t>(nullptr, sz + 1);
-
-            frame.allocate(&values[i]);
-            if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, var.data(), var.length(), values[i].data(), sz)) {
-                return Result::INVALID_ARGUMENT;
-            }
-
-
-            sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(), value.length(), nullptr, 0);
-            if(sz == 0) return Result::INVALID_ARGUMENT;
-
-            values[i] = Span<wchar_t>(nullptr, sz + 1);
-
-            frame.allocate(&values[i]);
-            if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(), value.length(), values[i].data(), sz)) {
-                return Result::INVALID_ARGUMENT;
-            }
-        }
-
-        auto cmp = [&](const usize& i1, const usize& i2) -> i32 {
-            i32 out = CompareStringOrdinal(
-                vars[i1].data(), static_cast<int>(vars[i1].length()), 
-                vars[i2].data(), static_cast<int>(vars[i2].length()), 
-                TRUE) == CSTR_LESS_THAN;
-            return out;
-        };
-        nbl::FunctionRef<i32(const usize&, const usize&)> compareFunc = cmp;
-        
-        quicksort(indices, compareFunc);
-
-
-        usize current = 0;
-        
-        LPWCH parentEnv = GetEnvironmentStringsW();
-
-        env = frame.end();
-
-        while(true) {
-
-            wchar_t* sep = nullptr;
-            if(parentEnv[0] == L'=') {
-                sep = wcschr(parentEnv + 1, L'=');
-            }
-            else {
-                sep = wcschr(parentEnv, L'=');
-            }
-
-            usize len = 0;
-            if(sep == nullptr) {
-                len = wcslen(parentEnv);
-            }
-            else {
-                len = sep - (parentEnv);
-            }
-            while(true) {
-                Span<wchar_t> currentVar = vars[indices[current]];
-                if(CompareStringOrdinal(parentEnv, len, currentVar.data(), currentVar.length(), TRUE) != CSTR_LESS_THAN) {
-                    break;
-                }
-
-                Span<wchar_t> currentValue = values[indices[current]];
-
-                wchar_t* appended = nullptr;
-                frame.allocate(&appended, currentVar.length() + 1 + currentValue.length() + 1);
-                memcpy(appended, currentVar.data(), currentVar.length() * sizeof(wchar_t));
-                appended[currentVar.length() * sizeof(wchar_t)] = L'=';
-                memcpy(appended + (currentVar.length() + 1), currentValue.data(), currentValue.length() * sizeof(wchar_t));
-                appended[(currentVar.length() + 1 + currentValue.length()) * sizeof(wchar_t)] = L'\0';
-
-                current++;
-            }
-
-            wchar_t* end = wcschr(parentEnv, L'\0');
-            usize diff = 0;
-            if(end == nullptr) {
-                diff = wcslen(parentEnv);
-            }
-            else {
-                diff = end - parentEnv;
-            }
-
-            wchar_t* appended = nullptr;
-            frame.allocate(&appended, diff + 1);
-
-            memcpy(appended, parentEnv, diff);
-            appended[diff] = L'\0';
-
-            parentEnv = end + 1;
-        }
-
-        FreeEnvironmentStringsW(parentEnv);
-    }
-
-
-    wchar_t* workingDir = nullptr;
-
-    if(!options.workingDir.empty()) {
-        usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), nullptr, 0);
-        if(sz == 0) return Result::INVALID_ARGUMENT;
-
-        frame.allocate(&workingDir, sz + 1);
-        if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), workingDir, sz)) {
-            return Result::INVALID_ARGUMENT;
-        }
-    }
-
-    SECURITY_ATTRIBUTES security = {
-        .nLength = sizeof(SECURITY_ATTRIBUTES),
-        .lpSecurityDescriptor = nullptr,
-        .bInheritHandle = true,
-    };
-
-
-
-    HANDLE nulHandle = CreateFileW(
-        L"NUL",
-        GENERIC_WRITE | GENERIC_READ,
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
-        &security,
-        OPEN_EXISTING,
-        0,
-        nullptr
-    );
-    if(nulHandle == INVALID_HANDLE_VALUE) {
-        return Result::IO_ERROR;
-    }
-
-
-    STARTUPINFOW startupInfo = {
-        .cb = sizeof(STARTUPINFOW),
-        .dwFlags = STARTF_USESTDHANDLES | 0,
-        .hStdInput = nulHandle
-    };
-
-
-    HANDLE pipeReader = nullptr;
-    HANDLE pipeWriter = nullptr;
-
-    switch(options.outputMode) {
-        case ProcessOutputMode::INHERIT: {
-            startupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-            startupInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-            break;
-        }
-        case ProcessOutputMode::PIPE: {
-            if(!CreatePipe(&pipeReader, &pipeWriter, &security, 0)) {
-                CloseHandle(nulHandle);
-                return Result::IO_ERROR;
-            }
-
-            if(!SetHandleInformation(pipeReader, HANDLE_FLAG_INHERIT, 0)) {
-                CloseHandle(nulHandle);
-                CloseHandle(pipeReader);
-                CloseHandle(pipeWriter);
-                return Result::IO_ERROR;
-            }
-
-
-            startupInfo.hStdOutput = pipeWriter;
-            startupInfo.hStdError = nulHandle;
-
-            outHandle->_pOutputHandle = pipeReader;
-            break;
-        }
-        case ProcessOutputMode::NULLIFY: {
-            startupInfo.hStdOutput = nulHandle;
-            startupInfo.hStdError = nulHandle;
-            break;
-        }
-        case ProcessOutputMode::REDIRECT: {
-
-            usize sz = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), nullptr, 0);
-            if(sz == 0) return Result::INVALID_ARGUMENT;
-
-            wchar_t* fileName;
-
-            frame.allocate(&fileName, sz + 1);
-            if(!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, options.workingDir.data(), options.workingDir.length(), workingDir, sz)) {
-                return Result::INVALID_ARGUMENT;
-            }
-
-            pipeWriter = CreateFileW(
-                fileName,
-                GENERIC_WRITE,
-                FILE_SHARE_WRITE,
-                &security,
-                CREATE_ALWAYS,
-                0,
-                nullptr
-            );
-            if(pipeWriter == INVALID_HANDLE_VALUE) {
-                return Result::IO_ERROR;
-            }
-
-            startupInfo.hStdError = nulHandle;
-            break;
-        }
-    }
-
-    PROCESS_INFORMATION processInfo{};
-    if(!CreateProcessW(
-        nullptr,
-        wdata,
-        nullptr,
-        nullptr,
-        true,
-        env == nullptr ? 0 : CREATE_UNICODE_ENVIRONMENT,
-        env,
-        workingDir,
-        &startupInfo,
-        &processInfo
-    )) {
-
-        CloseHandle(nulHandle);
-        if(pipeWriter) CloseHandle(pipeWriter);
-
-        return Result::PROCESS_ERROR;
-    }
-    
-    CloseHandle(nulHandle);
-    if(pipeWriter) CloseHandle(pipeWriter);
-
-    CloseHandle(processInfo.hThread);
-    outHandle->_pHandle = processInfo.hProcess;
-
-    return nbl::Result::SUCCESS;
+    return _launchSubprocess(commandLine, options, &outHandle->_pHandle, &outHandle->_pOutputHandle, &outHandle->_pJobHandle);
 }
 
 nbl::Result nbl::ProcessHandle::fromPid(i32 pid, nbl::ProcessHandle* out) {

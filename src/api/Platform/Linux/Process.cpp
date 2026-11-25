@@ -141,6 +141,9 @@ nbl::Result nbl::sleep(u32 millis) {
 
 
 nbl::ProcessHandle::~ProcessHandle() {
+    if(_bKillOnClose) {
+        kill();
+    }
     if(_pHandle != nullptr) {
         pid_t pid = _getHandle(_pHandle);
         close(pid);
@@ -226,7 +229,8 @@ nbl::Result nbl::ProcessHandle::spawn(StringView path, Span<StringView> args, Pr
 
     if(pid == 0) {
 
-        if(options.killOnParentExit) {
+        if(options.killOnClose) {
+            outHandle->_bKillOnClose = true;
             if(prctl(PR_SET_PDEATHSIG, SIGKILL) == -1) {
                 exit(1);
             }

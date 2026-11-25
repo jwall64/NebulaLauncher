@@ -126,7 +126,7 @@ struct ProcessCreateOptions {
     ProcessOutputMode outputMode;
     StringView outputRedirectFile;
     StringView workingDir;
-    bool killOnParentExit;
+    bool killOnClose;
     Span<EnvVar> environment;
 };
 
@@ -223,6 +223,10 @@ private:
 
     void* _pHandle;
     void* _pOutputHandle;
+    bool _bKillOnClose;
+#if defined(NBL_PLATFORM_WINDOWS)
+    void* _pJobHandle;
+#endif
 };
 
 }

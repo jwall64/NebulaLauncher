@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     res = nbl::ProcessHandle::run(argv[3], &proc, {
         .outputMode = nbl::ProcessOutputMode::INHERIT,
         .outputRedirectFile = {},
-        .killOnParentExit = true
+        .killOnClose = true
     });
     if(res.error()) {
         nbl::log(nbl::LogLevel::ERROR, "Unable to start the program!");
