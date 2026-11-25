@@ -49,6 +49,7 @@ nbl::Result nbl::MediaManager::reserveReference(StringView url, ImageClass ic, i
     }
 
     _stmt.bindAll(1, url, devId, ic.index);
+
     return _mConnection.execute(&_stmt, [&](i32 columns, nbl::DataValue* values, const char** names, i64 lastInsertRowId) -> nbl::Result {
         if(columns == 0) return nbl::Result::UNEXPECTED_ERROR;
         *outRefId = values[0].intValue;
@@ -262,6 +263,7 @@ nbl::Result nbl::MediaManager::create(StringView dbPath, i64 deviceId, MediaMana
         NBL_CHECK(DatabaseConnection::open(dbPath, &outManager->_mLoadConnections[i]));
     }
 
+    NBL_CHECK(nbl::Mutex::create(&outManager->_mMutex));
     NBL_CHECK(nbl::Mutex::create(&outManager->_mLoadMutex));
     NBL_CHECK(nbl::Condition::create(&outManager->_mLoadCondition));
 

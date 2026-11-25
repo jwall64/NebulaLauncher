@@ -212,6 +212,7 @@ nbl::Result nbl::HttpClient::_setupConnection(StringView url, _ActiveRequest* re
 
     if(postData.hasValue()) {
 
+        curl_easy_setopt(easyHandle, CURLOPT_COPYPOSTFIELDS, 1L);
         StringView postStr = *postData;
         if(!postStr.nullTerminated()) {
             NBL_CHECK(nbl::StringBuilder::nullTerminate(postStr, &postStr, &frame));

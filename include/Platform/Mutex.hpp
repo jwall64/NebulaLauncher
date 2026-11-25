@@ -126,7 +126,7 @@ private:
     std::atomic_int _mCount;
     bool _bInitialized;
 #elif defined(NBL_PLATFORM_WINDOWS)
-    volatile LONG _mCount;
+    LONG _mCount;
 #else
     void* _mHandle;
 #endif

@@ -204,7 +204,7 @@ qint32 nbl::frontend::AccountModel::login(QVariantMap fields) {
 }
 
 nbl::Result nbl::frontend::AccountModel::_startLogin(i64 accountId, QVariantMap fields) {
-    Latch copyLatch;
+    Latch copyLatch{};
     NBL_CHECK(nbl::Latch::create(1, &copyLatch));
 
     struct _UserData {

@@ -27,6 +27,7 @@
 
 #include <Core/Result.hpp>
 #include <Platform/Mutex.hpp>
+#include <Platform/Logging.hpp>
 
 #include "WindowsUtil.hpp"
 
@@ -74,6 +75,7 @@ nbl::Result nbl::Condition::create(Condition* out) {
 
 nbl::Latch::~Latch() {
     InterlockedExchange(&_mCount, 0);
+    WakeByAddressAll(&_mCount);
 }
 
 void nbl::Latch::increment() {
@@ -81,7 +83,9 @@ void nbl::Latch::increment() {
 }
 
 void nbl::Latch::decrement() {
-    InterlockedDecrement(&_mCount);
+    if(InterlockedDecrement(&_mCount) == 0) {
+        WakeByAddressAll(&_mCount);
+    }
 }
 
 void nbl::Latch::wait() {

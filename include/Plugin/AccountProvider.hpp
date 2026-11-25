@@ -41,7 +41,7 @@ class LoginTracker {
 public:
 
     inline Result startTracking(void* userData, i64 account, const AccountProvider* provider) {
-        auto lock = _mMutex.frameLock();
+        //auto lock = _mMutex.frameLock();
 
         if(!_bIdle) return nbl::Result::INVALID_STATE;
         _bIdle = false;
@@ -52,13 +52,13 @@ public:
     }
 
     inline void postStatus(StringView message) {
-        auto lock = _mMutex.frameLock();
+        //auto lock = _mMutex.frameLock();
         if(_bIdle) return;
         _pfnStatus(message, _pUserData);
     }
 
     inline bool isTracking() { 
-        auto lock = _mMutex.frameLock();
+        //auto lock = _mMutex.frameLock();
         return !_bIdle; 
     }
 
@@ -80,7 +80,7 @@ public:
             return nbl::Result::INVALID_ARGUMENT;
         }
 
-        NBL_CHECK(nbl::Mutex::create(&outTracker->_mMutex));
+        //NBL_CHECK(nbl::Mutex::create(&outTracker->_mMutex));
         outTracker->_pfnFinished = pfnFinished;
         outTracker->_pfnStatus = pfnStatus;
         outTracker->_pfnOpenUrl = pfnOpenUrl;
@@ -93,7 +93,7 @@ public:
 private:
 
     inline void _finishTracking(bool success, StringView message) {
-        auto lock = _mMutex.frameLock();
+        //auto lock = _mMutex.frameLock();
 
         if(_bIdle) return;
         _pfnFinished(success, message, _pUserData);
@@ -108,7 +108,7 @@ private:
     void (*_pfnStatus)(StringView, void*);
     bool (*_pfnOpenUrl)(StringView, void*);
     MediaManager* _pMediaManager;
-    Mutex _mMutex;
+    //Mutex _mMutex;
 
     friend class PluginLoader;
 };
