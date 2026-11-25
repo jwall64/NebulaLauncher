@@ -78,7 +78,14 @@ void nbl::LoginTracker::complete(PluginContext* context, StringView username, St
         .status = OnlineAccountStatus::LOGGED_IN
     };
 
-    res = OnlineAccount::update(context->databaseConnection(), account);
+    DatabaseConnection dc{};
+    res = (DatabaseConnection::open(context->databasePath(), &dc));
+
+    if(!res.success()) {
+        _finishTracking(false, "Failed to open database.");
+    }
+
+    res = OnlineAccount::update(&dc, account);
 
     if(res.success()) {
         _finishTracking(true, {});

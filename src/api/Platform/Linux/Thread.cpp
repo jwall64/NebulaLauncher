@@ -44,6 +44,7 @@ struct _ThreadData {
 };
 
 nbl::Pool<_ThreadData> _sThreadPool;
+nbl::Mutex _sThreadMutex;
 
 void* _threadEntryPoint(void* data) {
     _ThreadData* threadData = static_cast<_ThreadData*>(data);
@@ -52,6 +53,7 @@ void* _threadEntryPoint(void* data) {
     
     int old = threadData->refCount.fetch_sub(1);
     if(old == 1) {
+        auto lock = _sThreadMutex.frameLock();
         _sThreadPool.pop(threadData);
     } 
 
@@ -83,6 +85,7 @@ nbl::Result nbl::Thread::join(i32* outReturnValue) {
     int old = data->refCount.fetch_sub(1);
     if(old == 1) {
         if(outReturnValue) *outReturnValue = 0;
+        auto lock = _sThreadMutex.frameLock();
         _sThreadPool.pop(data);
     } else {
         void* ret;
@@ -108,6 +111,7 @@ nbl::Result nbl::Thread::detach() {
 
         int old = data->refCount.fetch_sub(1);
         if(old == 1) {
+            auto lock = _sThreadMutex.frameLock();
             _sThreadPool.pop(data);
         } else {
             int result = pthread_detach(data->handle);
@@ -124,13 +128,17 @@ nbl::Result nbl::Thread::detach() {
 nbl::Result nbl::Thread::create(EntryPointFn function, void* userData, Thread* outThread) {
 
     if(_sThreadPool.capacity() == 0) {
+        NBL_CHECK(nbl::Mutex::create(&_sThreadMutex));
         NBL_CHECK(nbl::Pool<_ThreadData>::create(128, &_sThreadPool));
     }
 
     NBL_ASSERT(outThread != nullptr);
 
     _ThreadData* threadData;
-    NBL_CHECK(_sThreadPool.push(&threadData));
+    {
+        auto lock = _sThreadMutex.frameLock();
+        NBL_CHECK(_sThreadPool.push(&threadData));
+    }
 
     threadData->function = function; 
     threadData->userData = userData;

@@ -631,7 +631,8 @@ u64 nbl::modifyTime(StringView path) {
     li.HighPart = attr.ftLastWriteTime.dwHighDateTime;
     li.LowPart = attr.ftLastWriteTime.dwLowDateTime;
 
-    return li.QuadPart;
+    constexpr static u64 _diff = 116444736000000000ULL;
+    return (li.QuadPart - _diff) / 10000ULL;
 }
 
 nbl::Result nbl::setModifyTime(StringView path, u64 modifyTime) {
